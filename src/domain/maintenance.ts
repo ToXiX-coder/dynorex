@@ -1,4 +1,5 @@
 import type { MaintenanceRecord } from "@/services/supabase/database.types";
+import type { VehicleKind } from "./vehicleKind";
 
 /**
  * Maintenance log (D-58): private records per car, each with an optional next-due date and/or mileage. Common
@@ -21,8 +22,42 @@ export const MAINTENANCE_PRESETS: readonly { title: string; miles: number | null
   { title: "Alignment", miles: null, months: 12 },
 ];
 
-export const presetFor = (title: string) =>
-  MAINTENANCE_PRESETS.find((p) => p.title.toLowerCase() === title.trim().toLowerCase()) ?? null;
+/** D-72: motorcycle jobs. Starting points only; intervals vary a lot by bike, so the manual wins. */
+export const MOTORCYCLE_PRESETS: typeof MAINTENANCE_PRESETS = [
+  { title: "Chain clean and lube", miles: 500, months: null },
+  { title: "Oil change", miles: 4000, months: 12 },
+  { title: "Chain slack check", miles: 500, months: null },
+  { title: "Tires", miles: null, months: null },
+  { title: "Brake pads", miles: null, months: null },
+  { title: "Brake fluid flush", miles: null, months: 24 },
+  { title: "Coolant flush", miles: null, months: 24 },
+  { title: "Air filter", miles: 12000, months: null },
+  { title: "Spark plugs", miles: 16000, months: null },
+  { title: "Valve clearance check", miles: 16000, months: null },
+  { title: "Fork oil", miles: 20000, months: null },
+  { title: "Battery", miles: null, months: null },
+];
+
+/** D-72: e-bike jobs. */
+export const EBIKE_PRESETS: typeof MAINTENANCE_PRESETS = [
+  { title: "Chain clean and lube", miles: 150, months: null },
+  { title: "Tire pressure check", miles: null, months: 1 },
+  { title: "Brake pads", miles: null, months: null },
+  { title: "Brake bleed", miles: null, months: 12 },
+  { title: "Battery health check", miles: null, months: 6 },
+  { title: "Bolt torque check", miles: null, months: 6 },
+  { title: "Tune-up", miles: 1000, months: 12 },
+  { title: "Chain replacement", miles: 2000, months: null },
+  { title: "Firmware update", miles: null, months: null },
+  { title: "Tires", miles: null, months: null },
+];
+
+/** The job list for a kind of vehicle (cars keep their list exactly). */
+export const presetsFor = (kind: VehicleKind) =>
+  kind === "motorcycle" ? MOTORCYCLE_PRESETS : kind === "ebike" ? EBIKE_PRESETS : MAINTENANCE_PRESETS;
+
+export const presetFor = (title: string, kind: VehicleKind = "car") =>
+  presetsFor(kind).find((p) => p.title.toLowerCase() === title.trim().toLowerCase()) ?? null;
 
 /** "Due soon": within 30 days or 500 miles. */
 /** Highest odometer reading the database accepts (maintenance_records check). */
@@ -76,8 +111,9 @@ export function suggestNextDue(
   title: string,
   doneOn: string,
   odometer: number | null,
+  kind: VehicleKind = "car",
 ): { next_due_on: string | null; next_due_odometer: number | null } {
-  const p = presetFor(title);
+  const p = presetFor(title, kind);
   if (!p) return { next_due_on: null, next_due_odometer: null };
   let next_due_on: string | null = null;
   if (p.months) {

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { CategoryIcon, StatusChip, categoryLabel } from "@/components/build/BuildBits";
 import { EbikeSpecCard, SpecCard } from "@/components/build/SpecCard";
-import { kindOf, timesZeroToSixty } from "@/domain/vehicleKind";
+import { kindDetail, kindOf, timesZeroToSixty } from "@/domain/vehicleKind";
 import { Button } from "@/components/buttons/Button";
 import { Card } from "@/components/cards/Card";
 import { GetAppBanner } from "@/components/feedback/GetAppBanner";
@@ -168,7 +168,7 @@ export default function PublicBuildScreen() {
           />
         )}
         title={b.title}
-        subtitle={car}
+        subtitle={[car, kindDetail(b)].filter(Boolean).join(" · ")}
         stats={kindOf(b) === "ebike" ? ebikeHeroStats(b) : heroStatsFrom(loaded.specs)}
         honk={(tap) => honkLine(b.make, b.model, b.year, tap)}
       />

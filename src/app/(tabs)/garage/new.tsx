@@ -73,8 +73,10 @@ export default function AddVehicle() {
           }
         }}
       >
-        <View style={{ gap: space.xs }}>
-          <Text variant="label">Hero photo</Text>
+        <View style={{ gap: space.md }}>
+          <Text variant="section" accessibilityRole="header">
+            Photo
+          </Text>
           {hero ? (
             <>
               <Image
@@ -104,7 +106,8 @@ export default function AddVehicle() {
             </View>
           )}
           <Text variant="caption" muted>
-            Optional. Resized on your phone and location data removed before upload.
+            The cover for your garage and build page. Until you add one, the drawing above stands in. Resized on your
+            phone, with location data removed, before upload.
           </Text>
           {heroError ? <InlineError kind={heroError} /> : null}
         </View>

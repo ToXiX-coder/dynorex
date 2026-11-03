@@ -586,6 +586,7 @@ export function seedDemo(): DemoState {
   // the starter list (domain/twoWheelCatalog.ts), which cites its sources; the owners and their mods are made up.
   const mt07 = vehicle(0x11c, apex.id, 2025, "Yamaha", "MT-07", "Canyon Hooligan", true, [72, 50, 403, null], {
     kind: "motorcycle",
+    engine_cc: 689,
     odometer: 4200,
   });
   const xp3 = vehicle(0x11d, civic.id, 2024, "Lectric", "XP 3.0", "Commuter Fold", true, [null, null, 62, null], {
@@ -594,6 +595,7 @@ export function seedDemo(): DemoState {
     battery_wh: 499,
     range_mi: 24,
     top_speed_mph: 28,
+    ebike_class: 3,
     odometer: 1850,
   });
   const twoWheels = {

@@ -179,6 +179,13 @@ export type EbikeNumbers = {
   battery_wh?: number | string | null;
   range_mi?: number | string | null;
   top_speed_mph?: number | string | null;
+  ebike_class?: number | null;
+};
+
+const CLASS_WORDS: Record<number, string> = {
+  1: "Class 1: pedal assist only, up to 20 mph.",
+  2: "Class 2: throttle allowed, up to 20 mph.",
+  3: "Class 3: pedal assist up to 28 mph.",
 };
 
 /** An e-bike stock number: the owner's figure, exact, in the same tile as the car specs. */
@@ -240,6 +247,9 @@ export function EbikeSpecCard({
   const range = n(bike.range_mi);
   return (
     <View style={{ gap: space.sm }}>
+      {bike.ebike_class && CLASS_WORDS[bike.ebike_class] ? (
+        <Text variant="bodyStrong">{CLASS_WORDS[bike.ebike_class]}</Text>
+      ) : null}
       <View style={styles.grid}>
         <StockTile label="Motor" value={n(bike.motor_w)} unit="W" />
         <StockTile label="Battery" value={wh} unit="Wh" />

@@ -139,6 +139,8 @@ function toPublic(b: BuildRow): PublicBuild {
     battery_wh: v.battery_wh ?? null,
     range_mi: v.range_mi ?? null,
     top_speed_mph: v.top_speed_mph ?? null,
+    engine_cc: v.engine_cc ?? null,
+    ebike_class: v.ebike_class ?? null,
   };
 }
 const publicBuilds = () => S.builds.filter(isPublic).map(toPublic);

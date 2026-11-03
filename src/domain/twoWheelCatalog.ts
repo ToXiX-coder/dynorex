@@ -39,6 +39,8 @@ export type EbikeSpec = {
   range_mi: Fig;
   /** assisted top speed (its US e-bike class) */
   top_speed_mph: Fig;
+  /** D-72: US class as sold (1 pedal assist to 20 mph, 2 throttle to 20 mph, 3 pedal assist to 28 mph) */
+  ebike_class: Fig;
   weight_lb: Fig;
   sources: string[];
 };
@@ -167,6 +169,7 @@ export const EBIKES: EbikeSpec[] = [
     battery_wh: src(672),
     range_mi: est(45),
     top_speed_mph: est(20),
+    ebike_class: est(2),
     weight_lb: est(73),
     sources: ["https://electricbikereport.com/rad-power-bikes-radrover-6-review/ (motor, battery)"],
   },
@@ -180,6 +183,7 @@ export const EBIKES: EbikeSpec[] = [
     battery_wh: est(672),
     range_mi: est(60),
     top_speed_mph: est(28),
+    ebike_class: est(3),
     weight_lb: est(63),
     sources: ["https://www.aventon.com/blogs/aventon_bikes/meet-level-2-aventons-first-electric-bike-with-a-torque-sensor (model)"],
   },
@@ -193,6 +197,7 @@ export const EBIKES: EbikeSpec[] = [
     battery_wh: src(710),
     range_mi: est(50),
     top_speed_mph: est(28),
+    ebike_class: src(3),
     weight_lb: src(58),
     sources: [
       "https://www.specialized.com/us/en/turbo-vado-2-40/p/206159 (motor, battery, weight)",
@@ -209,6 +214,7 @@ export const EBIKES: EbikeSpec[] = [
     battery_wh: src(499),
     range_mi: src(24),
     top_speed_mph: src(28),
+    ebike_class: est(3),
     weight_lb: src(62),
     sources: [
       "https://electricbikereview.com/lectric-ebikes/lectric-xp-3-0-review/ (motor, battery, price)",
@@ -225,6 +231,7 @@ export const EBIKES: EbikeSpec[] = [
     battery_wh: src(780),
     range_mi: src(25),
     top_speed_mph: est(28),
+    ebike_class: est(2),
     weight_lb: est(70),
     sources: [
       "https://super73.com/products/super73-s2-se-legacy (price)",
@@ -241,6 +248,7 @@ export const EBIKES: EbikeSpec[] = [
     battery_wh: src(500),
     range_mi: est(50),
     top_speed_mph: est(20),
+    ebike_class: est(1),
     weight_lb: src(54),
     sources: [
       "https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/electric-hybrid-bikes/allant/allant-7/a/30918/ (weight, size L)",
@@ -294,9 +302,56 @@ export const EBIKE_MAKES = [
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /** Starter models for a make (any year), for the model pick-list. */
+/**
+ * D-72: current model names for the popular makes, so the model list works offline and where NHTSA can't be
+ * reached (and for e-bikes, which NHTSA doesn't list at all). Names only; stock numbers come from the six above.
+ */
+const MODEL_NAMES: Record<"motorcycle" | "ebike", Record<string, string[]>> = {
+  motorcycle: {
+    "Harley-Davidson": ["Sportster S", "Nightster", "Street Glide", "Road Glide", "Fat Boy", "Low Rider S", "Breakout", "Pan America 1250"],
+    Honda: ["CBR650R", "CBR500R", "CBR1000RR-R Fireblade", "CB650R", "Rebel 500", "Rebel 1100", "Africa Twin", "Transalp", "Grom", "Gold Wing"],
+    Yamaha: ["MT-07", "MT-09", "MT-03", "YZF-R7", "YZF-R3", "YZF-R1", "Ténéré 700", "XSR700", "XSR900", "Bolt"],
+    Kawasaki: ["Ninja 500", "Ninja 650", "Ninja ZX-6R", "Ninja ZX-10R", "Z650", "Z900", "Versys 650", "KLR650", "Vulcan S"],
+    Suzuki: ["GSX-R600", "GSX-R750", "GSX-R1000", "GSX-8S", "SV650", "V-Strom 650", "V-Strom 800DE", "Hayabusa", "DR650S"],
+    BMW: ["R 1300 GS", "R 1250 RT", "S 1000 RR", "M 1000 RR", "F 900 R", "G 310 R", "R nineT", "K 1600 GT"],
+    Ducati: ["Monster", "Panigale V2", "Panigale V4", "Streetfighter V4", "Multistrada V4", "Scrambler Icon", "DesertX", "Diavel V4"],
+    Triumph: ["Street Triple 765", "Speed Triple 1200", "Trident 660", "Speed 400", "Bonneville T120", "Tiger 900", "Rocket 3"],
+    KTM: ["390 Duke", "790 Duke", "1290 Super Duke R", "RC 390", "390 Adventure", "890 Adventure"],
+    Indian: ["Scout", "Chief", "Chieftain", "Challenger", "FTR", "Springfield"],
+    "Royal Enfield": ["Classic 350", "Hunter 350", "Interceptor 650", "Continental GT 650", "Himalayan"],
+  },
+  ebike: {
+    "Rad Power Bikes": ["RadRover 6 Plus", "RadCity 5 Plus", "RadRunner 3 Plus", "RadWagon 4", "RadExpand 5"],
+    Aventon: ["Level.2", "Pace 500.3", "Sinch.2", "Abound", "Aventure.2"],
+    Lectric: ["XP 3.0", "XP Lite 2.0", "XPeak", "XPress", "Xpedition"],
+    Specialized: ["Turbo Vado 4.0", "Turbo Vado SL", "Turbo Como", "Turbo Tero", "Turbo Levo"],
+    Trek: ["Allant+ 7", "FX+ 2", "Verve+ 3", "Fetch+ 2", "Rail 9.7"],
+    Super73: ["S2 SE", "R Adventure", "ZX", "C1X"],
+    Cannondale: ["Tesoro Neo X", "Adventure Neo", "Moterra Neo"],
+    Giant: ["Explore E+", "Talon E+", "FastRoad E+", "Trance X E+"],
+    Gazelle: ["Ultimate C380", "Eclipse", "Medeo T9"],
+    Tern: ["GSD", "HSD", "Vektron"],
+    Ride1Up: ["700 Series", "Prodigy", "Revv 1"],
+    Velotric: ["Discover 2", "Nomad 1", "Packer 1"],
+    Juiced: ["RipRacer", "Scorpion X", "CrossCurrent X"],
+  },
+};
+
+/** Models for a make (any year): the starter specs first, then the name list, without repeats. */
 export function starterModels(kind: VehicleKind, make: string): string[] {
-  return ALL.filter((s) => s.kind === kind && same(s.make, make)).map((s) => s.model);
+  const withSpecs = ALL.filter((s) => s.kind === kind && same(s.make, make)).map((s) => s.model);
+  const names = kind === "car" ? [] : (Object.entries(MODEL_NAMES[kind]).find(([m]) => same(m, make))?.[1] ?? []);
+  const out: string[] = [];
+  for (const n of [...withSpecs, ...names]) if (!out.some((x) => same(x, n))) out.push(n);
+  return out;
 }
+
+/** What each US e-bike class means, in the words a buyer or insurer would use. */
+export const EBIKE_CLASSES = [
+  { id: 1, label: "Class 1", detail: "Pedal assist only, up to 20 mph" },
+  { id: 2, label: "Class 2", detail: "Throttle allowed, up to 20 mph" },
+  { id: 3, label: "Class 3", detail: "Pedal assist up to 28 mph" },
+] as const;
 
 /** The starter entry for exactly this make and model, or null. */
 export function starterSpec(kind: VehicleKind, make: string, model: string): TwoWheelSpec | null {
@@ -310,7 +365,14 @@ export function starterSummary(s: TwoWheelSpec): string {
   const parts =
     s.kind === "motorcycle"
       ? [n(s.engine_cc, "cc"), n(s.hp, "hp"), n(s.torque_lbft, "lb-ft"), n(s.weight_lb, "lb"), n(s.zero_to_sixty_s, "s 0–60", 1)]
-      : [n(s.motor_w, "W"), n(s.battery_wh, "Wh"), n(s.range_mi, "mi range"), n(s.top_speed_mph, "mph"), n(s.weight_lb, "lb")];
+      : [
+          `${s.ebike_class.est ? "~" : ""}Class ${s.ebike_class.v}`,
+          n(s.motor_w, "W"),
+          n(s.battery_wh, "Wh"),
+          n(s.range_mi, "mi range"),
+          n(s.top_speed_mph, "mph"),
+          n(s.weight_lb, "lb"),
+        ];
   const price = `${s.price_usd.est ? "~" : ""}$${s.price_usd.v.toLocaleString()} new`;
   const text = [...parts.filter(Boolean), price].join(" · ");
   return /~/.test(text) ? `${text} (~ is an estimate)` : text;

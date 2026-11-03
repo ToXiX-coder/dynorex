@@ -12,7 +12,8 @@ import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Text } from "@/components/Text";
 import { num } from "@/domain/calculators";
-import { latestPerJob, MAINTENANCE_PRESETS, ODO_MAX, suggestNextDue } from "@/domain/maintenance";
+import { latestPerJob, ODO_MAX, presetsFor, suggestNextDue } from "@/domain/maintenance";
+import { kindOf, type VehicleKind } from "@/domain/vehicleKind";
 import { parsePrice, priceText } from "@/domain/shop";
 import { dayText, localToday } from "@/domain/when";
 import { icsFileName, serviceIcs } from "@/domain/calendar";
@@ -90,6 +91,7 @@ export default function Maintenance() {
           vehicleId={id}
           vehicleName={vehicleName}
           odometer={odo}
+          kind={kindOf(vehicle)}
           record={editing === "new" || "redo" in editing ? null : editing}
           redo={editing !== "new" && "redo" in editing ? editing.redo : null}
           onDone={() => {
@@ -195,6 +197,7 @@ function RecordForm({
   vehicleId,
   vehicleName,
   odometer,
+  kind,
   record,
   redo = null,
   onDone,
@@ -202,12 +205,14 @@ function RecordForm({
   vehicleId: string;
   vehicleName: string;
   odometer: number | null;
+  /** D-72: the job list and intervals follow the kind of vehicle */
+  kind: VehicleKind;
   record: MaintenanceRecord | null;
   /** marking this due job done: a new record with its title, due dates suggested from today */
   redo?: MaintenanceRecord | null;
   onDone: () => void;
 }) {
-  const start = redo ? suggestNextDue(redo.title, today(), odometer) : null;
+  const start = redo ? suggestNextDue(redo.title, today(), odometer, kind) : null;
   const [title, setTitle] = useState(record?.title ?? redo?.title ?? "");
   const [doneOn, setDoneOn] = useState(record?.done_on ?? today());
   const [odo, setOdo] = useState(record?.odometer?.toString() ?? odometer?.toString() ?? "");
@@ -228,7 +233,7 @@ function RecordForm({
 
   const pick = (t: string) => {
     setTitle(t);
-    const s = suggestNextDue(t, doneOn, num(odo));
+    const s = suggestNextDue(t, doneOn, num(odo), kind);
     setNextOn(s.next_due_on ?? "");
     setNextOdo(s.next_due_odometer?.toString() ?? "");
   };
@@ -300,7 +305,7 @@ function RecordForm({
       </SectionHeader>
       {!record && !redo ? (
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
-          {MAINTENANCE_PRESETS.slice(0, 8).map((p) => (
+          {presetsFor(kind).slice(0, 8).map((p) => (
             <Chip key={p.title} label={p.title} selected={title === p.title} onPress={() => pick(p.title)} />
           ))}
         </View>

@@ -6,7 +6,7 @@ import { CategoryIcon, StatusChip, categoryLabel } from "@/components/build/Buil
 import { SignedImage } from "@/components/build/SignedImage";
 import { EbikeSpecCard, SpecCard } from "@/components/build/SpecCard";
 import { ebikeHeroStats, HeroHeader, heroStatsFrom } from "@/components/vehicle/HeroHeader";
-import { kindOf, timesZeroToSixty, usesNhtsa } from "@/domain/vehicleKind";
+import { kindDetail, kindOf, timesZeroToSixty, usesNhtsa } from "@/domain/vehicleKind";
 import { PowerGauge } from "@/components/vehicle/PowerGauge";
 import { isStock } from "@/domain/specRange";
 import { VehicleArt } from "@/components/vehicle/VehicleArt";
@@ -139,7 +139,7 @@ export default function VehicleDetail() {
         // the mileage has its own row below (where it's updated), except on a sold car's read-only copy
         kicker={`${sold ? "Sold" : v.visibility === "public" ? "Public" : "Private"}${sold && v.odometer !== null ? ` · ${Number(v.odometer).toLocaleString()} ${v.odometer_unit}` : ""}${odoBadge ? ` · ${odoBadge}` : ""}`}
         title={v.nickname || `${v.make} ${v.model}`}
-        subtitle={`${name}${v.trim_level ? ` ${v.trim_level}` : ""}`}
+        subtitle={[`${name}${v.trim_level ? ` ${v.trim_level}` : ""}`, kindDetail(v)].filter(Boolean).join(" · ")}
         stats={kind === "ebike" ? ebikeHeroStats(v) : heroStatsFrom(data!.estimate)}
         honk={(tap) => honkLine(v.make, v.model, v.year, tap)}
         scrollY={scrollY}
@@ -216,13 +216,11 @@ export default function VehicleDetail() {
         {usesNhtsa(kind) ? <RecallsCard vehicleId={id} car={name} /> : null}
         {timesZeroToSixty(kind) ? <PerfCard vehicleId={id} /> : null}
         <RecordsCard vehicleId={id} />
-        {/* the service schedule is a car's (oil, coolant, spark plugs); it stays for cars only */}
-        {kind === "car" ? (
-          <MaintenanceCard
-            vehicleId={id}
-            odometer={v.odometer !== null && v.odometer_unit === "mi" ? Number(v.odometer) : null}
-          />
-        ) : null}
+        {/* each kind has its own job list in the log (D-72: chain lube, valve checks, battery care...) */}
+        <MaintenanceCard
+          vehicleId={id}
+          odometer={v.odometer !== null && v.odometer_unit === "mi" ? Number(v.odometer) : null}
+        />
         <SharingCard
           vehicleId={id}
           isPublic={v.visibility === "public"}

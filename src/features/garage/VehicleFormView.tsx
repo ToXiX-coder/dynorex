@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button } from "@/components/buttons/Button";
-import { Chip } from "@/components/buttons/Chip";
 import { InlineError } from "@/components/feedback/Inline";
+import { CheckIcon } from "@/components/icons";
 import { YearField } from "@/components/forms/PickerFields";
+import { Segmented } from "@/components/forms/Segmented";
 import { SelectField } from "@/components/forms/SelectField";
+import { VehicleArt } from "@/components/vehicle/VehicleArt";
 import { FieldError, TextField, fixFieldsText } from "@/components/forms/TextField";
 import { makeOptions } from "@/domain/catalog";
 import { catalogModels } from "@/domain/modelCatalog";
 import { config } from "@/services/config";
 import {
+  EBIKE_CLASSES,
   EBIKE_MAKES,
   MOTORCYCLE_MAKES,
   starterLabel,
@@ -18,7 +21,16 @@ import {
   starterSummary,
   type Fig,
 } from "@/domain/twoWheelCatalog";
-import { hasVin, kindNoun, kindOf, usesNhtsa, VEHICLE_KINDS, type VehicleKind } from "@/domain/vehicleKind";
+import {
+  hasVin,
+  kindDetail,
+  kindLabel,
+  kindNoun,
+  kindOf,
+  usesNhtsa,
+  VEHICLE_KINDS,
+  type VehicleKind,
+} from "@/domain/vehicleKind";
 import { Text } from "@/components/Text";
 import type { ErrorKey } from "@/domain/copy/errors";
 import { fieldErrors, vehicleForKind, vehicleFormSchema, type VehicleForm } from "@/domain/validation/build";
@@ -26,7 +38,7 @@ import { buildService, type StockLookup } from "@/features/garage/buildService";
 import { isVinShape, normalizeVin } from "@/domain/record";
 import { decodeVin, nhtsa, type NhtsaMake, type NhtsaModel } from "@/services/nhtsa";
 import type { VehicleRow } from "@/services/supabase/database.types";
-import { border, color, radius, space, touch } from "@/theme/tokens";
+import { color, radius, space } from "@/theme/tokens";
 import { themed } from "@/theme/themed";
 
 export type VehicleSubmit = VehicleForm & {
@@ -51,7 +63,10 @@ type Fields = Record<
   | "motor_w"
   | "battery_wh"
   | "range_mi"
-  | "top_speed_mph",
+  | "top_speed_mph"
+  | "engine_cc"
+  | "ebike_class"
+  | "frame_serial",
   string
 >;
 
@@ -100,6 +115,9 @@ export function VehicleFormView({
     battery_wh: str(initial?.battery_wh),
     range_mi: str(initial?.range_mi),
     top_speed_mph: str(initial?.top_speed_mph),
+    engine_cc: str(initial?.engine_cc),
+    ebike_class: str(initial?.ebike_class),
+    frame_serial: str(initial?.frame_serial),
   }));
   const [kind, setKind] = useState<VehicleKind>(() => kindOf(initial));
   const [unit, setUnit] = useState<"mi" | "km">(initial?.odometer_unit ?? "mi");
@@ -251,12 +269,14 @@ export function VehicleFormView({
     // blanks take the starter list's stock numbers, as a car's take the factory table's
     const fill = <T,>(own: T | null | undefined, fig: Fig | null | undefined) => own ?? (fig ? fig.v : null);
     if (moto) {
+      data.engine_cc = fill(data.engine_cc, moto.engine_cc);
       data.baseline_hp = fill(data.baseline_hp, moto.hp);
       data.baseline_torque_lbft = fill(data.baseline_torque_lbft, moto.torque_lbft);
       data.baseline_weight_lb = fill(data.baseline_weight_lb, moto.weight_lb);
       data.baseline_zero_to_sixty_s = fill(data.baseline_zero_to_sixty_s, moto.zero_to_sixty_s);
     }
     if (ebike) {
+      data.ebike_class = fill(data.ebike_class, ebike.ebike_class);
       data.motor_w = fill(data.motor_w, ebike.motor_w);
       data.battery_wh = fill(data.battery_wh, ebike.battery_wh);
       data.range_mi = fill(data.range_mi, ebike.range_mi);
@@ -272,28 +292,57 @@ export function VehicleFormView({
     });
   };
 
+  const noun = kindNoun(kind);
+  const named = f.nickname.trim() || [f.year, f.make.trim(), f.model.trim()].filter(Boolean).join(" ");
+  const detail = kindDetail({
+    kind,
+    engine_cc: Number(f.engine_cc) || (moto?.engine_cc.v ?? null),
+    ebike_class: Number(f.ebike_class) || (ebike?.ebike_class.v ?? null),
+  });
+  const caption = [named ? kindLabel(kind) : null, detail].filter(Boolean).join(" · ");
   return (
-    <View style={{ gap: space.lg }}>
-      <View style={{ gap: space.xs }}>
-        <Text variant="label">What is it?</Text>
-        <View style={styles.kinds} accessibilityRole="radiogroup" accessibilityLabel="Vehicle type">
-          {VEHICLE_KINDS.map((k) => (
-            <Chip
-              key={k.id}
-              label={k.label}
-              selected={kind === k.id}
-              onPress={() => {
-                if (k.id === kind) return;
-                setKind(k.id);
-                // another kind's make list: keep what was typed, but drop NHTSA's car ids
-                setPickedMake(null);
-                setPickedModel(null);
-                setErrors({});
-              }}
-            />
-          ))}
+    <View style={styles.form}>
+      {/* the build's own drawing, redrawn as it's described: the type, the model's shape, a colour named in the
+          build name. It's the same art the garage shows until there's a photo */}
+      <View style={styles.preview}>
+        <VehicleArt
+          kind={kind}
+          make={f.make || " "}
+          model={f.model || " "}
+          year={/^\d{4}$/.test(f.year) ? Number(f.year) : null}
+          seed={initial?.id ?? "new-vehicle"}
+          hint={f.nickname}
+          label={false}
+          style={styles.art}
+        />
+        <View style={{ gap: 2 }}>
+          <Text variant="heading" numberOfLines={2}>
+            {named || `Your ${noun}`}
+          </Text>
+          {/* the type only once there's a name to put it beside (an empty form already says "Your e-bike") */}
+          {caption ? (
+            <Text variant="caption" muted>
+              {caption}
+            </Text>
+          ) : null}
         </View>
       </View>
+      <Segmented
+        label="Vehicle type"
+        options={VEHICLE_KINDS}
+        value={kind}
+        onChange={(k) => {
+          if (k === kind) return;
+          setKind(k);
+          // another kind's make list: keep what was typed, but drop NHTSA's car ids
+          setPickedMake(null);
+          setPickedModel(null);
+          setErrors({});
+        }}
+      />
+
+      <View style={styles.section}>
+        <Text variant="section" accessibilityRole="header">{`The ${noun}`}</Text>
       <YearField
         label="Year"
         required
@@ -361,104 +410,78 @@ export function VehicleFormView({
         }
         error={errors.model}
       />
-      <TextField
-        label="Trim"
-        value={f.trim_level}
-        onChangeText={set("trim_level")}
-        maxLength={50}
-        hint="Optional"
-        error={errors.trim_level}
-      />
-      <TextField
-        label="Build name"
-        value={f.nickname}
-        onChangeText={set("nickname")}
-        maxLength={60}
-        hint="Optional"
-        error={errors.nickname}
-      />
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
           <TextField
-            label="Odometer"
-            value={f.odometer}
-            onChangeText={set("odometer")}
-            keyboardType="number-pad"
-            hint="Optional"
-            error={errors.odometer}
+            label="Trim"
+            value={f.trim_level}
+            onChangeText={set("trim_level")}
+            maxLength={50}
+            placeholder={kind === "car" ? "Premium" : kind === "motorcycle" ? "ABS" : "Step-thru"}
+            error={errors.trim_level}
           />
         </View>
-        <View style={styles.units} accessibilityRole="radiogroup" accessibilityLabel="Odometer units">
-          <Chip label="mi" selected={unit === "mi"} onPress={() => setUnit("mi")} />
-          <Chip label="km" selected={unit === "km"} onPress={() => setUnit("km")} />
+        <View style={{ flex: 1 }}>
+          <TextField
+            label="Build name"
+            value={f.nickname}
+            onChangeText={set("nickname")}
+            maxLength={60}
+            placeholder={kind === "car" ? "Weekend Warrior" : kind === "motorcycle" ? "Canyon Carver" : "Commuter"}
+            error={errors.nickname}
+          />
         </View>
       </View>
-      {/* e-bikes have a frame serial, not a VIN: keep it in Notes if you want it on record */}
-      {hasVin(kind) ? (
+      {kind === "motorcycle" ? (
         <TextField
-          label="VIN"
-          value={f.vin}
-          onChangeText={(t) => {
-            set("vin")(t.toUpperCase());
-            setVinNote(null);
-          }}
-          autoCapitalize="characters"
-          autoCorrect={false}
-          maxLength={17}
-          hint="Optional and private. Never shown on public pages or shared. Fill in from VIN asks NHTSA's free public decoder, from your phone."
-          error={errors.vin}
+          label="Engine size (cc)"
+          value={f.engine_cc}
+          onChangeText={set("engine_cc")}
+          placeholder={phFig(moto?.engine_cc)}
+          keyboardType="number-pad"
+          maxLength={5}
+          error={errors.engine_cc}
         />
       ) : null}
-      {hasVin(kind) && isVinShape(f.vin) ? (
-        <View style={{ alignSelf: "flex-start" }}>
-          <Button
-            title="Fill in from VIN"
-            variant="secondary"
-            loading={decoding}
-            accessibilityLabel="Fill in the year, make, model and trim from the VIN"
-            onPress={() => void fillFromVin()}
+      {kind === "ebike" ? (
+        <View style={{ gap: space.xs }}>
+          <Text variant="label">Class</Text>
+          <Segmented
+            label="E-bike class"
+            options={EBIKE_CLASSES}
+            value={Number(f.ebike_class) || (ebike?.ebike_class.v ?? null)}
+            onChange={(c) => set("ebike_class")(String(c))}
           />
+          <Text variant="caption" muted>
+            {EBIKE_CLASSES.find((c) => c.id === (Number(f.ebike_class) || ebike?.ebike_class.v))?.detail ??
+              "The US class on the frame sticker. It decides where you can ride."}
+            {!f.ebike_class && ebike ? (ebike.ebike_class.est ? " (our estimate for this model)" : " (as sold)") : ""}
+          </Text>
+          {errors.ebike_class ? <FieldError message={errors.ebike_class} /> : null}
         </View>
       ) : null}
-      {vinNote ? <Text variant="caption">{vinNote}</Text> : null}
-      <TextField
-        label="Notes"
-        value={f.description}
-        onChangeText={set("description")}
-        maxLength={2000}
-        multiline
-        hint="Optional"
-        error={errors.description}
-      />
+      </View>
+
       <View style={styles.section}>
-        <Text variant="title" accessibilityRole="header">
+        <Text variant="section" accessibilityRole="header">
           Stock numbers
         </Text>
-        {spec ? (
-          <View style={styles.factory} accessibilityLiveRegion="polite">
-            <Text variant="bodyStrong">{`Factory specs found: ${spec.label}`}</Text>
-            <Text variant="caption" muted>
-              {`${spec.hp} hp · ${spec.torque_lbft} lb-ft${spec.weight_lb ? ` · ${spec.weight_lb.toLocaleString()} lb` : ""}${spec.zero_to_sixty_s ? ` · 0–60 ${spec.zero_to_sixty_s.toFixed(1)} s` : ""}. Any box you leave blank uses these. Type your own if your car differs.`}
-            </Text>
-          </View>
-        ) : starter ? (
-          <View style={styles.factory} accessibilityLiveRegion="polite">
-            <Text variant="bodyStrong">{`Stock specs found: ${starterLabel(starter)}`}</Text>
-            <Text variant="caption" muted>
-              {`${starterSummary(starter)}. Any box you leave blank uses these. Type your own if yours differs.`}
-            </Text>
-          </View>
-        ) : (
-          <Text variant="caption" muted>
-            {kind !== "car"
-              ? f.model.trim()
-                ? `No stock specs on file for this ${kindNoun(kind)} yet. Add your own numbers, or leave blank.`
-                : `Pick a model from the list and we will fill in its stock numbers. Your own numbers always win.`
-              : looked
-                ? "No factory specs on file for this car yet. Add your own numbers to get estimates, or leave blank."
-                : "Pick the year, make and model and we will fill in the factory numbers. Your own numbers always win."}
+        <View style={styles.status} accessibilityLiveRegion="polite">
+          {spec || starter ? <CheckIcon color={color.accent} /> : null}
+          <Text variant="caption" muted={!(spec || starter)} style={{ flex: 1 }}>
+            {spec
+              ? `From the factory: ${spec.label}. Blank boxes use these.`
+              : starter
+                ? `${starterLabel(starter)}: ${starterSummary(starter)}. Blank boxes use these.`
+                : kind !== "car"
+                  ? f.model.trim()
+                    ? `Nothing on file for this ${noun} yet. Add your own, or leave them blank.`
+                    : "Pick a model and its stock numbers fill in. Yours always win."
+                  : looked
+                    ? "Nothing on file for this car yet. Add your own, or leave them blank."
+                    : "Pick the year, make and model and the factory numbers fill in. Yours always win."}
           </Text>
-        )}
+        </View>
         {kind === "ebike" ? (
           <>
             <View style={styles.row}>
@@ -568,19 +591,86 @@ export function VehicleFormView({
           </>
         )}
       </View>
-      <View style={{ gap: space.xs }}>
-        <Text variant="label">Who can see it</Text>
-        <View style={styles.units} accessibilityRole="radiogroup" accessibilityLabel="Visibility">
-          <Chip label="Private" selected={visibility === "private"} onPress={() => setVisibility("private")} />
-          <Chip label="Public" selected={visibility === "public"} onPress={() => setVisibility("public")} />
+      <View style={styles.section}>
+        <Text variant="section" accessibilityRole="header">
+          Ownership
+        </Text>
+        <View style={styles.row}>
+          <View style={{ flex: 1 }}>
+            <TextField
+              label="Odometer"
+              value={f.odometer}
+              onChangeText={set("odometer")}
+              keyboardType="number-pad"
+              error={errors.odometer}
+            />
+          </View>
+          <View style={styles.unit}>
+            <Segmented label="Odometer unit" options={UNITS} value={unit} onChange={setUnit} />
+          </View>
         </View>
+        {hasVin(kind) ? (
+          <TextField
+            label="VIN"
+            value={f.vin}
+            onChangeText={(t) => {
+              set("vin")(t.toUpperCase());
+              setVinNote(null);
+            }}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            maxLength={17}
+            hint="Private. Never shown on public pages. Fill in from VIN asks NHTSA's free public decoder, from your phone."
+            error={errors.vin}
+          />
+        ) : (
+          // an e-bike's VIN: the serial stamped under the bottom bracket. Proves it's yours if it's ever stolen
+          <TextField
+            label="Frame serial"
+            value={f.frame_serial}
+            onChangeText={(t) => set("frame_serial")(t.toUpperCase())}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            maxLength={40}
+            hint="Private. Stamped under the frame by the pedals. Handy for police reports and insurance if it's stolen."
+            error={errors.frame_serial}
+          />
+        )}
+        {hasVin(kind) && isVinShape(f.vin) ? (
+          <View style={{ alignSelf: "flex-start" }}>
+            <Button
+              title="Fill in from VIN"
+              variant="secondary"
+              loading={decoding}
+              accessibilityLabel="Fill in the year, make, model and trim from the VIN"
+              onPress={() => void fillFromVin()}
+            />
+          </View>
+        ) : null}
+        {vinNote ? <Text variant="caption">{vinNote}</Text> : null}
+        <TextField
+          label="Notes"
+          value={f.description}
+          onChangeText={set("description")}
+          maxLength={2000}
+          multiline
+          error={errors.description}
+        />
+      </View>
+
+      {children}
+
+      <View style={styles.section}>
+        <Text variant="section" accessibilityRole="header">
+          Sharing
+        </Text>
+        <Segmented label="Who can see it" options={VISIBILITY} value={visibility} onChange={setVisibility} />
         <Text variant="caption" muted>
           {visibility === "public"
-            ? "Anyone can see this vehicle (never the VIN). Needs a verified email."
+            ? `Anyone can see this ${noun} and its build (never the ${hasVin(kind) ? "VIN" : "frame serial"}). Needs a verified email.`
             : "Only you can see it."}
         </Text>
       </View>
-      {children}
       {error ? <InlineError kind={error} /> : null}
       {/* the marked fields can be scrolled far out of sight, so a failed save says so beside the button */}
       {Object.keys(errors).length ? <FieldError message={fixFieldsText(Object.keys(errors).length)} /> : null}
@@ -589,32 +679,24 @@ export function VehicleFormView({
   );
 }
 
+const UNITS = [
+  { id: "mi", label: "mi" },
+  { id: "km", label: "km" },
+] as const;
+const VISIBILITY = [
+  { id: "private", label: "Private" },
+  { id: "public", label: "Public" },
+] as const;
+
 const styles = themed(() =>
   StyleSheet.create({
+    // sections sit further apart than the fields inside them, so the groups read without boxes or rules
+    form: { gap: space.xl },
+    section: { gap: space.md },
+    preview: { gap: space.sm },
+    art: { height: 150, borderRadius: radius.md },
+    status: { flexDirection: "row", gap: space.xs, alignItems: "flex-start" },
+    unit: { width: 116, paddingTop: space.lg },
     row: { flexDirection: "row", gap: space.sm, alignItems: "flex-start" },
-    kinds: { flexDirection: "row", gap: space.sm, flexWrap: "wrap" },
-    units: { flexDirection: "row", gap: space.sm, paddingTop: space.lg },
-    suggest: {
-      backgroundColor: color.surface,
-      borderRadius: radius.md,
-      borderWidth: border.hairline,
-      borderColor: color.border,
-    },
-    suggestRow: { minHeight: touch.min, justifyContent: "center", paddingHorizontal: space.md },
-    factory: {
-      gap: space.xxs,
-      padding: space.sm,
-      borderRadius: radius.sm,
-      borderLeftWidth: 3,
-      borderLeftColor: color.accent,
-      backgroundColor: color.surface,
-    },
-    section: {
-      gap: space.sm,
-      padding: space.md,
-      borderRadius: radius.md,
-      borderWidth: border.hairline,
-      borderColor: color.border,
-    },
   }),
 );

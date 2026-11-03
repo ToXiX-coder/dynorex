@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { brandOptions, categoryForModName, modNameOptions } from "@/domain/catalog";
 import { EBIKES, MOTORCYCLES, starterModels, starterSpec, starterSummary } from "@/domain/twoWheelCatalog";
 import { vehicleForKind, vehicleFormSchema } from "@/domain/validation/build";
-import { categoryForKind, KIND_CATEGORIES, kindOf, kindSpecFields } from "@/domain/vehicleKind";
+import { categoryForKind, KIND_CATEGORIES, kindDetail, kindOf, kindSpecFields } from "@/domain/vehicleKind";
+import { MAINTENANCE_PRESETS, presetsFor, suggestNextDue } from "@/domain/maintenance";
 
 describe("vehicle kinds (D-71)", () => {
   it("anything saved before kinds existed reads as a car", () => {
@@ -79,6 +80,66 @@ describe("vehicle kinds (D-71)", () => {
   });
 });
 
+describe("two-wheel details (D-72)", () => {
+  const base = {
+    year: 2025,
+    make: "Yamaha",
+    model: "MT-07",
+    vin: "",
+    trim_level: "",
+    nickname: "",
+    description: "",
+    odometer: "",
+    baseline_hp: "",
+    baseline_torque_lbft: "",
+    baseline_weight_lb: "",
+    baseline_zero_to_sixty_s: "",
+    odometer_unit: "mi",
+    visibility: "private",
+  };
+
+  it("keeps engine size on motorcycles and class and frame serial on e-bikes only", () => {
+    const moto = vehicleForKind(
+      vehicleFormSchema.parse({ ...base, kind: "motorcycle", engine_cc: "689", ebike_class: "3", frame_serial: "abc-123" }),
+    );
+    expect(moto).toMatchObject({ engine_cc: 689, ebike_class: null, frame_serial: null });
+    const ebike = vehicleForKind(
+      vehicleFormSchema.parse({ ...base, kind: "ebike", engine_cc: "689", ebike_class: "3", frame_serial: "abc-123" }),
+    );
+    expect(ebike).toMatchObject({ engine_cc: null, ebike_class: 3, frame_serial: "ABC-123" });
+    const car = vehicleForKind(vehicleFormSchema.parse({ ...base, engine_cc: "689" }));
+    expect(car.engine_cc).toBeNull();
+  });
+
+  it("refuses an impossible class or serial", () => {
+    expect(vehicleFormSchema.safeParse({ ...base, kind: "ebike", ebike_class: "4" }).success).toBe(false);
+    expect(vehicleFormSchema.safeParse({ ...base, kind: "ebike", frame_serial: "no spaces allowed" }).success).toBe(false);
+  });
+
+  it("names the detail after the model", () => {
+    expect(kindDetail({ kind: "motorcycle", engine_cc: 1252 })).toBe("1,252cc");
+    expect(kindDetail({ kind: "ebike", ebike_class: 2 })).toBe("Class 2");
+    expect(kindDetail({ kind: "car", engine_cc: 2000 })).toBeNull();
+  });
+
+  it("lists models offline for popular makes, starter specs first", () => {
+    const yamaha = starterModels("motorcycle", "yamaha");
+    expect(yamaha[0]).toBe("MT-07");
+    expect(yamaha).toContain("YZF-R7");
+    expect(new Set(yamaha).size).toBe(yamaha.length);
+    expect(starterModels("ebike", "Tern")).toContain("GSD");
+  });
+
+  it("gives each kind its own maintenance jobs, cars unchanged", () => {
+    expect(presetsFor("car")).toBe(MAINTENANCE_PRESETS);
+    expect(presetsFor("motorcycle").map((p) => p.title)).toContain("Chain clean and lube");
+    expect(presetsFor("ebike").map((p) => p.title)).toContain("Battery health check");
+    // a motorcycle oil change suggests its own interval
+    expect(suggestNextDue("Oil change", "2026-01-15", 10000, "motorcycle").next_due_odometer).toBe(14000);
+    expect(suggestNextDue("Oil change", "2026-01-15", 10000).next_due_odometer).toBe(15000);
+  });
+});
+
 describe("two-wheel starter list", () => {
   it("has six of each, every one with a source", () => {
     expect(MOTORCYCLES).toHaveLength(6);
@@ -87,7 +148,7 @@ describe("two-wheel starter list", () => {
   });
 
   it("finds models by make, any case", () => {
-    expect(starterModels("motorcycle", "yamaha")).toEqual(["MT-07"]);
+    expect(starterModels("motorcycle", "yamaha")[0]).toBe("MT-07");
     const xp = starterSpec("ebike", "LECTRIC", "xp 3.0");
     expect(xp?.kind === "ebike" && xp.motor_w.v).toBe(500);
     expect(starterSpec("car", "Yamaha", "MT-07")).toBeNull();
@@ -95,6 +156,6 @@ describe("two-wheel starter list", () => {
 
   it("marks estimates in the summary", () => {
     expect(starterSummary(starterSpec("ebike", "Aventon", "Level.2")!)).toMatch(/~ is an estimate/);
-    expect(starterSummary(starterSpec("ebike", "Lectric", "XP 3.0")!)).not.toMatch(/~/);
+    expect(starterSummary(starterSpec("motorcycle", "Harley-Davidson", "Sportster S")!)).not.toMatch(/~/);
   });
 });

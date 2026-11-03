@@ -58,6 +58,14 @@ export function categoryForKind(c: ModCategoryId | null, kind: VehicleKind): Mod
 export const kindSpecFields = (k: VehicleKind) =>
   k === "ebike" ? (["weight"] as const) : (["hp", "torque", "weight", "zero_to_sixty"] as const);
 
+/** D-72: the one-word fact that goes after the name: "689cc" for a motorcycle, "Class 3" for an e-bike. */
+export function kindDetail(v: { kind?: string | null; engine_cc?: number | null; ebike_class?: number | null }): string | null {
+  const k = kindOf(v);
+  if (k === "motorcycle" && v.engine_cc) return `${Number(v.engine_cc).toLocaleString()}cc`;
+  if (k === "ebike" && v.ebike_class) return `Class ${v.ebike_class}`;
+  return null;
+}
+
 /** VIN, NHTSA lookups, recalls and 0-60 timing: cars and motorcycles (NHTSA covers both), never e-bikes. */
 export const hasVin = (k: VehicleKind) => k !== "ebike";
 export const usesNhtsa = (k: VehicleKind) => k !== "ebike";

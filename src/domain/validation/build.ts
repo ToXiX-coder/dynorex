@@ -94,6 +94,18 @@ export const vehicleFormSchema = z.object({
   battery_wh: optNumber("Battery", 1, 10000, { int: true }).optional(),
   range_mi: optNumber("Range", 0, 500, { exclusive: true }).optional(),
   top_speed_mph: optNumber("Top speed", 0, 300, { exclusive: true }).optional(),
+  // D-72: a motorcycle's engine size, an e-bike's class and its private frame serial
+  engine_cc: optNumber("Engine size", 20, 10000, { int: true }).optional(),
+  ebike_class: optNumber("Class", 1, 3, { int: true }).optional(),
+  frame_serial: z
+    .preprocess(
+      (v) => (typeof v === "string" ? (v.trim() === "" ? null : v.trim().toUpperCase()) : v),
+      z
+        .string()
+        .regex(/^[A-Z0-9-]{3,40}$/, "Frame serial: 3–40 letters, numbers or dashes")
+        .nullable(),
+    )
+    .optional(),
 }).superRefine((v, ctx) => {
   if (v.kind !== "ebike" && v.baseline_weight_lb !== null && v.baseline_weight_lb <= 100)
     ctx.addIssue({ code: "custom", path: ["baseline_weight_lb"], message: "Weight: 100–20000" });
@@ -106,8 +118,16 @@ export type VehicleForm = z.infer<typeof vehicleFormSchema>;
  */
 export function vehicleForKind(f: VehicleForm): VehicleForm {
   if (f.kind === "ebike")
-    return { ...f, vin: null, baseline_hp: null, baseline_torque_lbft: null, baseline_zero_to_sixty_s: null };
-  return { ...f, motor_w: null, battery_wh: null, range_mi: null, top_speed_mph: null };
+    return {
+      ...f,
+      vin: null,
+      engine_cc: null,
+      baseline_hp: null,
+      baseline_torque_lbft: null,
+      baseline_zero_to_sixty_s: null,
+    };
+  const noEbike = { motor_w: null, battery_wh: null, range_mi: null, top_speed_mph: null, ebike_class: null, frame_serial: null };
+  return { ...f, ...noEbike, engine_cc: f.kind === "motorcycle" ? (f.engine_cc ?? null) : null };
 }
 
 /** Raw text fields for the four spec deltas in the mod form. */
