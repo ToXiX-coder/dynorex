@@ -1,0 +1,24 @@
+appId: app.dynorex.staging
+name: Locked sticker -> paywall -> (simulated) Dynorex+ -> sticker sent
+---
+- launchApp:
+    clearState: true
+- tapOn: "Discover Builds"
+- tapOn:
+    text: ".*Big Block Restomod.*"
+- scrollUntilVisible:
+    element: "React with Torq"
+- tapOn: "React with Torq"
+- tapOn:
+    text: "Fire.*Dynorex\\+ only"
+- tapOn: "See Dynorex+"
+- scrollUntilVisible:
+    element: "Subscribe for $59.99/year"
+- tapOn: "Subscribe for $59.99/year"
+- assertVisible: "You're on Dynorex+"
+- tapOn: "Done"
+- tapOn: "React with Torq"
+- tapOn:
+    text: "Fire. This build is fire"
+- tapOn: "Close"
+- assertVisible: "Fire: 1, including yours"

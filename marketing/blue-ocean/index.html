@@ -1,0 +1,517 @@
+<title>Dynorex Blue Ocean</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+  /* Layout: one tall column of three "slides" (16:9-ish panels) you can screen-record for the pitch video,
+     each tool on its own panel, in the order the competition names them. Single dark look: Dynorex is dark always. */
+  :root {
+    --asphalt: #111315;
+    --card: #1A1D1F;
+    --raised: #23272A;
+    --line: #2E3236;
+    --ink: #F2EFE8;
+    --ink-2: #B9B6AE;
+    --ink-3: #8D8A83;
+    --lime: #AAFF00;
+    --s-vhr: #3987e5;
+    --s-apps: #d95926;
+    --s-diy: #199e70;
+    --display: "Orbitron", "Arial Black", Arial, sans-serif;
+    --body: "Barlow", "Segoe UI", Arial, sans-serif;
+    --cond: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--asphalt);
+    color: var(--ink);
+    font: 400 17px/1.5 var(--body);
+    margin: 0;
+    padding-block: 40px 64px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+  header.top { display: flex; flex-direction: column; gap: 10px; max-width: 760px; }
+  .brand { font: 900 15px/1 var(--display); letter-spacing: 0.08em; color: var(--lime); }
+  h1 { font: 900 clamp(30px, 5vw, 52px)/1.05 var(--display); text-transform: uppercase; margin: 0; text-wrap: balance; }
+  .lede { color: var(--ink-2); margin: 0; max-width: 64ch; }
+  section.panel {
+    background: var(--card);
+    border-radius: 20px;
+    padding: clamp(20px, 3.5vw, 44px);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+  }
+  .panel h2 { font: 900 clamp(22px, 3.2vw, 34px)/1.1 var(--display); text-transform: uppercase; margin: 0; text-wrap: balance; }
+  .tool { font: 700 15px/1 var(--cond); letter-spacing: 0.06em; text-transform: uppercase; color: var(--lime); }
+  .panel p.sub { margin: 0; color: var(--ink-2); max-width: 70ch; }
+  .note { font-size: 14px; color: var(--ink-3); margin: 0; max-width: 90ch; }
+
+  /* strategy canvas */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+  .legend button {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; border: 0; padding: 6px 2px; cursor: pointer;
+    color: var(--ink); font: 600 15px/1.2 var(--body); min-height: 44px;
+  }
+  .legend button[aria-pressed="false"] { color: var(--ink-3); }
+  .legend button[aria-pressed="false"] svg { opacity: 0.35; }
+  .legend button:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; border-radius: 4px; }
+  .chartwrap { overflow-x: auto; position: relative; }
+  .chartwrap svg { display: block; width: 100%; min-width: 760px; height: auto; }
+  .tip {
+    position: absolute; pointer-events: none; background: var(--raised); color: var(--ink);
+    border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.35; max-width: 260px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+  }
+  .tip b { display: block; font-weight: 700; margin-bottom: 2px; }
+  details { color: var(--ink-2); }
+  details summary { cursor: pointer; font-weight: 600; color: var(--ink); min-height: 32px; }
+  .tablewrap { overflow-x: auto; margin-top: 12px; }
+  table { border-collapse: collapse; font-size: 14px; min-width: 640px; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 10px; vertical-align: top; }
+  thead th { color: var(--ink-3); font-weight: 600; }
+  tbody tr:nth-child(odd) { background: #16191B; }
+  td.n { text-align: center; }
+
+  /* noncustomers */
+  .tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .tier { background: var(--asphalt); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .tier .ring { display: flex; align-items: center; gap: 10px; }
+  .tier h3 { margin: 0; font: 700 22px/1.15 var(--cond); text-transform: uppercase; letter-spacing: 0.02em; }
+  .tier .who { font-weight: 600; color: var(--ink); margin: 0; }
+  .tier ul { margin: 0; padding-left: 18px; color: var(--ink-2); display: flex; flex-direction: column; gap: 6px; }
+  .tier .offer { margin-top: auto; padding-top: 12px; border-top: 2px solid var(--line); color: var(--ink); }
+  .tier .offer b { color: var(--lime); font-weight: 600; }
+  .rings { display: flex; justify-content: center; }
+
+  /* ERRC */
+  .errc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .q { border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 12px; min-width: 0; background: var(--asphalt); }
+  .q h3 { margin: 0; font: 900 20px/1 var(--display); text-transform: uppercase; display: flex; align-items: baseline; gap: 10px; }
+  .q h3 span { font: 600 14px/1.2 var(--body); text-transform: none; color: var(--ink-3); }
+  .q ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .q li { padding-left: 16px; position: relative; }
+  .q li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 8px; height: 3px; background: currentColor; transform: skewX(-20deg); opacity: 0.7; }
+  .q li small { display: block; color: var(--ink-3); font-size: 14px; }
+  .q.create { background: var(--lime); color: var(--asphalt); }
+  .q.create h3 span, .q.create li small { color: #2b3a05; }
+  .q.raise h3 { color: var(--lime); }
+
+  /* buyer utility map */
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .bumwrap { overflow-x: auto; }
+  table.bum { border-collapse: separate; border-spacing: 6px; min-width: 900px; width: 100%; table-layout: fixed; font-size: 14px; }
+  table.bum th { color: var(--ink-2); font-weight: 600; text-align: left; vertical-align: bottom; padding: 6px 8px; }
+  table.bum thead th b { display: block; font: 700 17px/1.1 var(--cond); text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink); }
+  table.bum thead th small { display: block; color: var(--ink-3); font-size: 13px; font-weight: 500; margin-top: 2px; }
+  table.bum tbody th { width: 150px; vertical-align: middle; color: var(--ink); }
+  table.bum thead th:first-child { width: 150px; }
+  table.bum td { border-radius: 10px; padding: 10px; vertical-align: top; line-height: 1.3; height: 74px; }
+  table.bum td.lime { background: var(--lime); color: var(--asphalt); font-weight: 600; }
+  table.bum td.grey { background: var(--raised); color: var(--ink-2); }
+  table.bum td.none { background: #16191B; }
+  .bumkey { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--ink-2); }
+  .bumkey span { display: inline-flex; align-items: center; gap: 8px; }
+  .k { width: 18px; height: 14px; border-radius: 4px; display: inline-block; }
+  .k.lime { background: var(--lime); } .k.grey { background: var(--raised); } .k.none { background: #16191B; outline: 1px solid var(--line); }
+
+  /* market sizes and tagline */
+  .sizes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .sizes div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .sizes b { font: 900 26px/1 var(--display); color: var(--lime); font-variant-numeric: tabular-nums; }
+  .sizes span { font-size: 14px; color: var(--ink-2); }
+  .tagline { margin: 0; font: 700 clamp(22px, 3vw, 30px)/1.15 var(--cond); color: var(--lime); text-transform: uppercase; letter-spacing: 0.02em; }
+
+  @media (max-width: 820px) {
+    .tiers, .errc { grid-template-columns: minmax(0, 1fr); }
+    .sizes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .line { transition: opacity 160ms ease-out; }
+  }
+</style>
+
+<main>
+  <header class="top">
+    <div class="brand">DYNOREX</div>
+    <h1>Blue Ocean tools</h1>
+    <p class="lede">All five Blue Ocean Competition templates, in the course's order, filled in for the Dynorex Build Record: the As-Is Strategy Canvas, the Buyer Utility Map, the Three Tiers of Noncustomers, the Eliminate-Reduce-Raise-Create Grid and the To-Be Strategy Canvas with its tagline.</p>
+  </header>
+
+  <!-- 1. AS-IS STRATEGY CANVAS -->
+  <section class="panel" id="asis" aria-labelledby="asis-h">
+    <div class="tool">Template 1 · As-Is Strategy Canvas</div>
+    <h2 id="asis-h">The red ocean today</h2>
+    <p class="sub">How the options a modified-car owner has today compete, factor by factor. They fight over the same few things on the left, and nobody offers what's on the right.</p>
+    <div class="legend" id="asis-legend" role="group" aria-label="Show or hide a line"></div>
+    <div class="chartwrap" id="asis-wrap">
+      <svg id="asis-chart" viewBox="0 0 1200 560" role="img" aria-labelledby="asis-title asis-desc">
+        <title id="asis-title">As-Is Strategy Canvas</title>
+        <desc id="asis-desc">Offering level from 0 to 5 on nine factors for a vehicle history report, build-log apps, and a forum thread with a folder of receipts. The full scores are in the table below.</desc>
+      </svg>
+      <div class="tip" id="asis-tip" hidden></div>
+    </div>
+    <p class="note">Scores are our own judgment from each option's public pages, checked October 2026, on a 0 (none) to 5 (best in class) scale. They are not measurements. Sources: Carfax support via Rennlist; Tekmetric's Carfax integration FAQ; BuildSheet, CarBuilds and My Garage Journal websites; Carfax 2025 results (SEC filing).</p>
+    <details>
+      <summary>See the scores as a table</summary>
+      <div class="tablewrap"><table id="asis-table"></table></div>
+    </details>
+  </section>
+
+  <!-- 2. BUYER UTILITY MAP -->
+  <section class="panel" id="utility" aria-labelledby="bum-h">
+    <div class="tool">Template 2 · Buyer Utility Map</div>
+    <h2 id="bum-h">Where owners and buyers get stuck</h2>
+    <p class="sub">Each column is a stage of owning, buying or selling a modified car; each row is a way to make it better. Grey marks what the industry already covers. Lime marks a pain point nobody solves, and what Dynorex does about it.</p>
+    <div class="bumwrap">
+      <table class="bum" id="bum">
+        <caption class="vh">Buyer Utility Map: six stages of the buyer experience against six utility levers</caption>
+      </table>
+    </div>
+    <div class="bumkey">
+      <span><i class="k lime"></i>Pain point Dynorex unlocks</span>
+      <span><i class="k grey"></i>Already covered by others</span>
+      <span><i class="k none"></i>No clear pain point</span>
+    </div>
+    <p class="note">Stages and levers are the standard Blue Ocean Buyer Utility Map. Pain points come from our research: forum posts by sellers and buyers, shop buying guides, insurer guidance and auction listings. Dynorex's answers are all built and in the demo.</p>
+  </section>
+
+  <!-- 3. THREE TIERS OF NONCUSTOMERS -->
+  <section class="panel" id="noncustomers" aria-labelledby="nc-h">
+    <div class="tool">Template 3 · Three Tiers of Noncustomers</div>
+    <h2 id="nc-h">The people nobody serves yet</h2>
+    <p class="sub">Instead of fighting for the few people who already use a build-log app, Dynorex goes after the much bigger groups that don't keep a record at all, and the businesses that need one.</p>
+    <div class="rings" aria-hidden="true">
+      <svg viewBox="0 0 560 150" width="560" style="max-width:100%;height:auto">
+        <circle cx="280" cy="150" r="140" fill="#16191B" stroke="#2E3236" stroke-width="2"/>
+        <circle cx="280" cy="150" r="98" fill="#1F2326" stroke="#2E3236" stroke-width="2"/>
+        <circle cx="280" cy="150" r="56" fill="#2A2F33" stroke="#2E3236" stroke-width="2"/>
+        <circle cx="280" cy="150" r="22" fill="#AAFF00"/>
+        <text x="280" y="140" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="13" font-weight="700" fill="#111315">MARKET</text>
+        <text x="280" y="108" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="15" font-weight="700" fill="#F2EFE8">TIER 1</text>
+        <text x="280" y="66" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="15" font-weight="700" fill="#F2EFE8">TIER 2</text>
+        <text x="280" y="27" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="15" font-weight="700" fill="#F2EFE8">TIER 3</text>
+      </svg>
+    </div>
+    <div class="tiers">
+      <article class="tier">
+        <h3>Tier 1 · Soon to be</h3>
+        <p class="who">Owners on the edge of the market</p>
+        <ul>
+          <li>Keep a folder of receipts, a spreadsheet or a forum build thread</li>
+          <li>Type their mod list into the listing by hand when they sell</li>
+          <li>Tried a build-log app, but buyers still had to take their word for it</li>
+        </ul>
+        <p class="offer"><b>What pulls them in:</b> the same record, but the shop confirms the work and it goes to the buyer with the car.</p>
+      </article>
+      <article class="tier">
+        <h3>Tier 2 · Refusing</h3>
+        <p class="who">People who chose not to bother</p>
+        <ul>
+          <li>Buyers who "never buy modified" because they can't check what was done</li>
+          <li>Owners who think nobody believes an owner's log anyway</li>
+          <li>Owners afraid that logging an off-road part gets them in trouble</li>
+          <li>Dealers and instant-offer sites that just discount anything "modified"</li>
+        </ul>
+        <p class="offer"><b>What pulls them in:</b> a visible proof level on every entry, edits that can't hide, a VIN check, and honest emissions status the owner controls.</p>
+      </article>
+      <article class="tier">
+        <h3>Tier 3 · Unexplored</h3>
+        <p class="who">Markets nobody thought of as customers</p>
+        <ul>
+          <li>Tuning and install shops that want their name on good work</li>
+          <li>Enthusiast auctions like Bring a Trailer, where sellers write build sheets by hand</li>
+          <li>Specialty insurers like Hagerty, who ask owners for photos and receipts</li>
+        </ul>
+        <p class="offer"><b>What pulls them in:</b> a free one-tap confirm link for shops, a build sheet ready to paste into a listing, and an insurance mod list.</p>
+      </article>
+    </div>
+    <div class="sizes">
+      <div><b>$52.9B</b><span>US spend on accessory and performance parts, 2025 (SEMA)</span></div>
+      <div><b>38.3M</b><span>Used vehicles expected to sell in the US in 2026 (Cox Automotive)</span></div>
+      <div><b>$1.71B</b><span>Sold on Bring a Trailer in 2025, across 49,486 auctions</span></div>
+      <div><b>2.8M</b><span>Vehicles insured by Hagerty, which asks owners for build receipts</span></div>
+    </div>
+    <p class="note">These groups come from our market research (forum posts, shop guides, Hagerty and auction pages). The figures above size the markets each tier sits in, not Dynorex's share of them. Nobody has measured how many modified cars sell each year, and no shop, auction or insurer has signed up. The 60-day beta is how we find out.</p>
+  </section>
+
+  <!-- 4. ERRC GRID -->
+  <section class="panel" id="errc" aria-labelledby="errc-h">
+    <div class="tool">Template 4 · Eliminate-Reduce-Raise-Create Grid</div>
+    <h2 id="errc-h">How Dynorex breaks away</h2>
+    <p class="sub">The four actions that move Dynorex off the industry's curve and onto its own.</p>
+    <div class="errc">
+      <div class="q">
+        <h3>Eliminate <span>what the industry takes for granted</span></h3>
+        <ul>
+          <li>Title and accident data feeds<small>Dynorex is not a vehicle history report; it records the build.</small></li>
+          <li>"Verified" and "certified" badges<small>Every entry says exactly who stands behind it instead.</small></li>
+          <li>Paying to keep your own records<small>Logging is free.</small></li>
+        </ul>
+      </div>
+      <div class="q">
+        <h3>Reduce <span>well below the industry</span></h3>
+        <ul>
+          <li>Effort to document a mod<small>One tap from "Next up" to the camera; the receipt files itself.</small></li>
+          <li>Trust in the seller's word alone<small>Each entry shows its proof level: owner-entered, paperwork, part identified, shop-confirmed.</small></li>
+          <li>Cost to the owner<small>Free to log; one planned fee when the car sells.</small></li>
+        </ul>
+      </div>
+      <div class="q raise">
+        <h3>Raise <span>well above the industry</span></h3>
+        <ul>
+          <li>Proof behind every entry<small>Receipts, part numbers and dyno sheets tied to the mod.</small></li>
+          <li>Honesty about changes<small>Edits keep the old version; removals stay visible.</small></li>
+          <li>The buyer's confidence at the sale<small>A buyer's link with the whole record and a VIN match.</small></li>
+        </ul>
+      </div>
+      <div class="q create">
+        <h3>Create <span>what the industry never offered</span></h3>
+        <ul>
+          <li>Shop confirmation<small>The shop that did the work confirms it through a one-time link, no account.</small></li>
+          <li>A VIN check that never shows the VIN<small>The buyer types it from the car and sees match or no match.</small></li>
+          <li>Emissions status on every engine, exhaust and electronics mod<small>With the CARB EO number when there is one.</small></li>
+          <li>A record that moves with the car<small>A one-time transfer code hands it to the buyer.</small></li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Everything listed is built and works in the demo, except the per-sale fee. The app isn't launched yet.</p>
+  </section>
+
+  <!-- 5. TO-BE STRATEGY CANVAS -->
+  <section class="panel" id="tobe" aria-labelledby="tobe-h">
+    <div class="tool">Template 5 · To-Be Strategy Canvas</div>
+    <p class="tagline">Your build, on record. The shop confirms it.</p>
+    <h2 id="tobe-h">Dynorex leaves the red ocean</h2>
+    <p class="sub">The same nine factors with Dynorex added. It drops what the others fight over on the left, and rises alone on the right, where nobody else competes.</p>
+    <div class="legend" id="tobe-legend" role="group" aria-label="Show or hide a line"></div>
+    <div class="chartwrap" id="tobe-wrap">
+      <svg id="tobe-chart" viewBox="0 0 1200 560" role="img" aria-labelledby="tobe-title tobe-desc">
+        <title id="tobe-title">To-Be Strategy Canvas</title>
+        <desc id="tobe-desc">Offering level from 0 to 5 on nine factors for a vehicle history report, build-log apps, a forum thread with a folder of receipts, and Dynorex. Dynorex is high on shop confirmation, emissions status and results tied to each mod, where the others are near zero. The full scores are in the table below.</desc>
+      </svg>
+      <div class="tip" id="tobe-tip" hidden></div>
+    </div>
+    <p class="note">Same scoring as the As-Is canvas. Dynorex's per-sale price is planned, not built; everything else on its curve works in the demo today.</p>
+    <details>
+      <summary>See the scores as a table</summary>
+      <div class="tablewrap"><table id="tobe-table"></table></div>
+    </details>
+  </section>
+</main>
+
+<script>
+(() => {
+  const factors = [
+    ["Price paid", "Who pays and how much. Higher means more expensive."],
+    ["Title and accident history", "Title brands, accidents and odometer records from DMV and insurer feeds."],
+    ["Mod list detail", "Brand, part and date for each aftermarket part."],
+    ["Receipts with each mod", "Paperwork stored with the entry it backs up."],
+    ["Can't be quietly changed", "Edits and removals can't disappear before a sale."],
+    ["Goes to the next owner", "The record follows the car to the buyer."],
+    ["Shop confirms the work", "The installer puts its own name on the job."],
+    ["Emissions status", "Whether a part is legal on the road, with a CARB EO number."],
+    ["Results tied to each mod", "Dyno or timed results linked to the part that changed them."],
+  ];
+  const series = [
+    { id: "vhr", name: "Vehicle history report", short: "History report", color: "var(--s-vhr)", hex: "#3987e5", shape: "square",
+      scores: [4, 5, 1, 0, 5, 3, 1, 0, 0],
+      why: ["$30 to $45 a report, paid by the buyer", "Built from DMV, insurer and shop feeds", "Shop jobs show as generic service lines", "Owner-logged receipts never reach the report", "Owners can't edit their report", "Anyone can buy it again by VIN", "Shop software sends only a job title", "Not tracked", "Not tracked"] },
+    { id: "apps", name: "Build-log apps", short: "Build-log apps", color: "var(--s-apps)", hex: "#d95926", shape: "triangle",
+      scores: [2, 0, 4, 3, 1, 3, 0, 0, 1],
+      why: ["Free to $14.99 a month", "Not covered", "Detailed parts lists", "Some store invoices", "The owner can edit anything", "Some transfer by link or claim code", "None found that has the shop confirm", "Not tracked", "One UK app has a stat-impact field"] },
+    { id: "diy", name: "Forum thread and a receipt folder", short: "Forum + folder", color: "var(--s-diy)", hex: "#199e70", shape: "diamond",
+      scores: [0, 0, 3, 2, 1, 1, 0, 1, 2],
+      why: ["Free", "Not covered", "As detailed as the owner bothers to be", "Photos posted, if any", "Posts can be edited or deleted", "Only if the paper folder goes with the car", "No", "Sometimes mentioned", "Dyno sheets get posted, not linked to parts"] },
+    { id: "dyno", name: "Dynorex Build Record", short: "Dynorex", color: "var(--lime)", hex: "#AAFF00", shape: "circle",
+      scores: [1, 0, 4, 4, 4, 5, 5, 4, 4],
+      why: ["Free to log; one fee at the sale (planned)", "Not covered: on purpose", "Brand, part number, date and who fitted it", "Receipts and dyno sheets stored with the entry", "Edits keep the old version; removals stay visible", "Transfer code moves it to the buyer", "One-time link, no account, records what the shop saw", "CARB EO number or back to stock", "Dyno runs fall between the mods around them"] },
+  ];
+  const NS = "http://www.w3.org/2000/svg";
+  // As-Is: the industry alone. To-Be: Dynorex added, with the new-value band.
+  drawCanvas("asis", series.filter((s) => s.id !== "dyno"), false);
+  drawCanvas("tobe", allSeries(), true);
+  drawUtilityMap();
+  function allSeries() { return series; }
+
+  function drawCanvas(p, series, band) {
+  const visible = new Set(series.map((s) => s.id));
+  const svg = document.getElementById(`${p}-chart`);
+  const W = 1200, H = 560, L = 70, R = 150, T = 62, B = 118;
+  const iw = W - L - R, ih = H - T - B;
+  const x = (i) => L + (iw / (factors.length - 1)) * i;
+  const y = (v) => T + ih - (v / 5) * ih;
+  const el = (tag, attrs, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(n);
+    return n;
+  };
+  const marker = (shape, cx, cy, r, color, parent) => {
+    const ring = "#1A1D1F";
+    if (shape === "circle") return el("circle", { cx, cy, r, fill: color, stroke: ring, "stroke-width": 2 }, parent);
+    if (shape === "square") return el("rect", { x: cx - r, y: cy - r, width: r * 2, height: r * 2, rx: 2, fill: color, stroke: ring, "stroke-width": 2 }, parent);
+    if (shape === "triangle") return el("path", { d: `M${cx},${cy - r - 1} L${cx + r + 1},${cy + r} L${cx - r - 1},${cy + r} Z`, fill: color, stroke: ring, "stroke-width": 2, "stroke-linejoin": "round" }, parent);
+    return el("path", { d: `M${cx},${cy - r - 2} L${cx + r + 2},${cy} L${cx},${cy + r + 2} L${cx - r - 2},${cy} Z`, fill: color, stroke: ring, "stroke-width": 2 }, parent);
+  };
+
+  // the "new space" band behind the factors only Dynorex offers
+  const newFrom = 6;
+  el("rect", { x: x(newFrom) - 40, y: T - 46, width: x(factors.length - 1) - x(newFrom) + 80, height: ih + 46 + 80, rx: 10, fill: "#AAFF00", "fill-opacity": 0.07 });
+  const nl = el("text", { x: x(newFrom) - 28, y: T - 24, fill: "#AAFF00", "font-family": "Barlow Condensed, Arial Narrow, sans-serif", "font-size": 15, "font-weight": 700, "letter-spacing": "0.05em" });
+  nl.textContent = band ? "NEW VALUE: ONLY DYNOREX OFFERS THESE" : "EMPTY SPACE: NOBODY OFFERS THESE YET";
+
+  // grid and axis
+  for (let v = 0; v <= 5; v++) {
+    el("line", { x1: L, x2: x(factors.length - 1), y1: y(v), y2: y(v), stroke: "#2E3236", "stroke-width": 1 });
+    const t = el("text", { x: L - 14, y: y(v) + 5, "text-anchor": "end", fill: "#8D8A83", "font-size": 14, "font-family": "Barlow, Arial, sans-serif" });
+    t.textContent = v;
+  }
+  const yl = el("text", { x: 18, y: T + ih / 2, transform: `rotate(-90 18 ${T + ih / 2})`, "text-anchor": "middle", fill: "#8D8A83", "font-size": 14, "font-family": "Barlow, Arial, sans-serif" });
+  yl.textContent = "Offering level (low to high)";
+  factors.forEach(([name], i) => {
+    const words = name.split(" ");
+    const lines = [];
+    let cur = "";
+    for (const w of words) {
+      if ((cur + " " + w).trim().length > 13 && cur) { lines.push(cur); cur = w; } else cur = (cur + " " + w).trim();
+    }
+    lines.push(cur);
+    const t = el("text", { x: x(i), y: T + ih + 30, "text-anchor": "middle", fill: i >= newFrom ? "#F2EFE8" : "#B9B6AE", "font-size": 15, "font-weight": i >= newFrom ? 700 : 500, "font-family": "Barlow, Arial, sans-serif" });
+    lines.forEach((ln, k) => {
+      const s = el("tspan", { x: x(i), dy: k ? 18 : 0 }, t);
+      s.textContent = ln;
+    });
+  });
+
+  // lines (Dynorex drawn last, on top)
+  const groups = {};
+  series.forEach((s) => {
+    const g = el("g", { class: "line", "data-id": s.id });
+    groups[s.id] = g;
+    const d = s.scores.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`).join(" ");
+    el("path", { d, fill: "none", stroke: s.hex, "stroke-width": s.id === "dyno" ? 3.5 : 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, g);
+    s.scores.forEach((v, i) => marker(s.shape, x(i), y(v), s.id === "dyno" ? 6 : 5, s.hex, g));
+    // direct label at the end of the line
+    const last = s.scores[s.scores.length - 1];
+    void last;
+  });
+  // direct labels placed on the right edge, nudged apart
+  const ends = series.map((s) => ({ s, yy: y(s.scores[s.scores.length - 1]) })).sort((a, b) => a.yy - b.yy);
+  for (let i = 1; i < ends.length; i++) if (ends[i].yy - ends[i - 1].yy < 18) ends[i].yy = ends[i - 1].yy + 18;
+  ends.forEach(({ s, yy }) => {
+    const t = el("text", { x: x(factors.length - 1) + 14, y: yy + 5, "text-anchor": "start", fill: "#F2EFE8", "font-size": 14, "font-weight": s.id === "dyno" ? 700 : 500, "font-family": "Barlow, Arial, sans-serif" }, groups[s.id]);
+    t.textContent = s.short;
+  });
+
+  // legend
+  const legend = document.getElementById(`${p}-legend`);
+  [...series].reverse().forEach((s) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-pressed", "true");
+    const sw = document.createElementNS(NS, "svg");
+    sw.setAttribute("width", "28"); sw.setAttribute("height", "16"); sw.setAttribute("aria-hidden", "true");
+    const ln = document.createElementNS(NS, "line");
+    ln.setAttribute("x1", "1"); ln.setAttribute("x2", "27"); ln.setAttribute("y1", "8"); ln.setAttribute("y2", "8");
+    ln.setAttribute("stroke", s.hex); ln.setAttribute("stroke-width", s.id === "dyno" ? "3.5" : "2");
+    sw.appendChild(ln);
+    const m = marker(s.shape, 14, 8, 4, s.hex, sw);
+    void m;
+    b.appendChild(sw);
+    b.appendChild(document.createTextNode(s.name));
+    b.addEventListener("click", () => {
+      const on = visible.has(s.id);
+      if (on && visible.size === 1) return;
+      on ? visible.delete(s.id) : visible.add(s.id);
+      b.setAttribute("aria-pressed", String(!on));
+      groups[s.id].style.opacity = on ? "0" : "1";
+    });
+    legend.appendChild(b);
+  });
+
+  // hover: nearest factor column shows every visible option's level and why
+  const tip = document.getElementById(`${p}-tip`);
+  const wrap = document.getElementById(`${p}-wrap`);
+  const guide = el("line", { x1: 0, x2: 0, y1: T, y2: T + ih, stroke: "#8D8A83", "stroke-width": 1, "stroke-dasharray": "3 4", opacity: 0 });
+  const hit = el("rect", { x: L - 30, y: T - 14, width: iw + 60, height: ih + 60, fill: "transparent" });
+  const show = (clientX) => {
+    const pt = svg.createSVGPoint();
+    pt.x = clientX; pt.y = 0;
+    const at = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const i = Math.max(0, Math.min(factors.length - 1, Math.round((at.x - L) / (iw / (factors.length - 1)))));
+    guide.setAttribute("x1", x(i)); guide.setAttribute("x2", x(i)); guide.setAttribute("opacity", 1);
+    tip.innerHTML = "";
+    const h = document.createElement("b"); h.textContent = factors[i][0]; tip.appendChild(h);
+    const sub = document.createElement("div"); sub.style.color = "#8D8A83"; sub.style.marginBottom = "6px"; sub.textContent = factors[i][1]; tip.appendChild(sub);
+    [...series].reverse().filter((s) => visible.has(s.id)).forEach((s) => {
+      const row = document.createElement("div");
+      row.textContent = `${s.short}: ${s.scores[i]} · ${s.why[i]}`;
+      row.style.borderLeft = `3px solid ${s.hex}`; row.style.paddingLeft = "6px"; row.style.marginTop = "4px";
+      tip.appendChild(row);
+    });
+    tip.hidden = false;
+    const box = wrap.getBoundingClientRect();
+    const sx = x(i) / W * svg.getBoundingClientRect().width + (svg.getBoundingClientRect().left - box.left) + wrap.scrollLeft;
+    const left = sx + 14 + 260 > wrap.scrollLeft + box.width ? sx - 274 : sx + 14;
+    tip.style.left = `${Math.max(0, left)}px`;
+    tip.style.top = "12px";
+  };
+  hit.addEventListener("pointermove", (e) => show(e.clientX));
+  hit.addEventListener("pointerleave", () => { tip.hidden = true; guide.setAttribute("opacity", 0); });
+
+  // table view
+  const table = document.getElementById(`${p}-table`);
+  const head = table.createTHead().insertRow();
+  ["Factor", ...series.map((s) => s.name)].forEach((h) => { const th = document.createElement("th"); th.textContent = h; head.appendChild(th); });
+  const body = table.createTBody();
+  factors.forEach(([name], i) => {
+    const r = body.insertRow();
+    const th = document.createElement("th"); th.scope = "row"; th.textContent = name; r.appendChild(th);
+    series.forEach((s) => { const c = r.insertCell(); c.textContent = `${s.scores[i]} · ${s.why[i]}`; });
+  });
+  }
+
+  // Buyer Utility Map: the standard six stages of the buyer experience cycle against the six utility levers
+  function drawUtilityMap() {
+    const stages = [
+      ["Purchase", "Buying a modified car"],
+      ["Delivery", "Handing it over at the sale"],
+      ["Use", "Owning and building it"],
+      ["Supplements", "Shops, insurance, parts"],
+      ["Maintenance", "Service and upgrades"],
+      ["Disposal", "Selling it on"],
+    ];
+    const levers = ["Customer productivity", "Simplicity", "Convenience", "Risk", "Fun and image", "Environmental friendliness"];
+    // [lever][stage]: ["lime" | "grey", text] or null
+    const cells = {
+      "Customer productivity": [null, null, ["lime", "One tap from Next up to the camera files the receipt"], null, null, ["lime", "Build sheet ready to paste into an auction listing"]],
+      "Simplicity": [["lime", "One buyer's link instead of 200 photos of receipts"], null, null, null, ["grey", "Service apps already log maintenance"], null],
+      "Convenience": [null, ["lime", "A one-time code moves the record to the buyer"], null, ["lime", "Shops confirm with a link, no account"], null, null],
+      "Risk": [["lime", "Proof level on every entry, VIN match without showing the VIN"], ["grey", "History reports cover title and accidents"], null, ["lime", "Insurance mod list with receipts for a claim"], ["lime", "Mileage that goes backwards gets flagged"], ["lime", "Edits after a shop confirmed are flagged, so the price holds"]],
+      "Fun and image": [null, null, ["lime", "Every step a mod climbs shows on the record"], ["lime", "Shops get their name on good work"], null, null],
+      "Environmental friendliness": [null, null, ["lime", "Emissions status with the CARB EO number"], null, null, null],
+    };
+    const t = document.getElementById("bum");
+    const hr = t.createTHead().insertRow();
+    const corner = document.createElement("th"); corner.textContent = ""; hr.appendChild(corner);
+    stages.forEach(([s, d]) => { const th = document.createElement("th"); th.scope = "col"; th.innerHTML = ""; const b = document.createElement("b"); b.textContent = s; const sm = document.createElement("small"); sm.textContent = d; th.append(b, sm); hr.appendChild(th); });
+    const body = t.createTBody();
+    levers.forEach((l) => {
+      const r = body.insertRow();
+      const th = document.createElement("th"); th.scope = "row"; th.textContent = l; r.appendChild(th);
+      cells[l].forEach((c) => {
+        const td = r.insertCell();
+        if (!c) { td.className = "none"; td.setAttribute("aria-label", "No clear pain point"); return; }
+        td.className = c[0];
+        td.textContent = c[1];
+      });
+    });
+  }
+})();
+</script>

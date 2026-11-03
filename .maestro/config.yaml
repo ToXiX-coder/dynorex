@@ -1,0 +1,5 @@
+# Maestro end-to-end flows (https://maestro.mobile.dev). Not yet run: needs an emulator/simulator or EAS.
+#   pitch/    run against the PITCH build (eas build --profile pitch): no server, sample data
+#   staging/  run against the staging build with a test account (TEST_EMAIL / TEST_PASSWORD env vars)
+flows:
+  - pitch/*

@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dynorex Build Record</title>
+<meta name="description" content="Log every mod with the receipt and the shop that fitted it. Share it with buyers and hand it over when you sell.">
+<link rel="icon" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  /* Dynorex brand palette, fixed. One dark look by design. */
+  :root {
+    --asphalt: #111315;
+    --deep: #0B0C0D;
+    --card: #1A1D1F;
+    --card-2: #23272A;
+    --track: #2A2E31;
+    --bone: #F2EFE8;
+    --muted: #B9B5AC;
+    --lime: #AAFF00;
+    --red: #E00000;
+    --on-lime: #111315;
+    --cond: "Barlow Condensed", "Arial Narrow", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  html.lenis, html.lenis body { height: auto; }
+  body {
+    margin: 0;
+    background: var(--asphalt);
+    color: var(--bone);
+    font: 400 18px/1.55 Barlow, "Segoe UI", system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+  .wrap { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 40px); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  h1, h2, h3 {
+    font-family: var(--cond);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 0.92;
+    margin: 0;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  h1 { font-size: clamp(60px, 10vw, 176px); }
+  .hero .content > * { max-width: min(100%, 52vw); }
+  @media (max-width: 760px) { .hero .content > * { max-width: 100%; } }
+  h2 { font-size: clamp(44px, 6.5vw, 104px); }
+  p { margin: 0; max-width: 60ch; }
+  .lead { font-size: clamp(19px, 1.5vw, 22px); }
+  .note { color: var(--muted); font-size: 16px; }
+  /* HUD labels: the instrument cluster voice */
+  .hud { font: 700 13px/1 var(--cond); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hud b { color: var(--bone); font-weight: 700; }
+
+  /* Buttons: flat, square, with instrument-panel corner brackets */
+  .btn {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 54px; padding: 0 30px;
+    background: var(--lime); color: var(--on-lime);
+    font: 800 20px/1 var(--cond); letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
+    border: 0; border-radius: 0; cursor: pointer; white-space: nowrap;
+    transition: transform 150ms cubic-bezier(.23, 1, .32, 1);
+  }
+  .btn::before, .btn::after {
+    content: ""; position: absolute; width: 10px; height: 10px; border: 2px solid var(--lime);
+    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn::before { top: -7px; left: -7px; border-right: 0; border-bottom: 0; }
+  .btn::after { bottom: -7px; right: -7px; border-left: 0; border-top: 0; }
+  .btn:hover::before { transform: translate(-3px, -3px); }
+  .btn:hover::after { transform: translate(3px, 3px); }
+  .btn:active { transform: scale(0.97); }
+  .btn.ghost { background: transparent; color: var(--bone); outline: 2px solid var(--track); outline-offset: -2px; }
+
+  /* ---------- Preloader and ignition gate ---------- */
+  .loader { display: none; }
+  .js .loader {
+    position: fixed; inset: 0; z-index: 50; background: var(--deep);
+    display: grid; place-items: center; text-align: center;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 900ms cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  .loader.gone { clip-path: inset(0 0 100% 0); pointer-events: none; }
+  .loader .stack { display: grid; gap: 28px; justify-items: center; padding: 24px; }
+  .loader img { width: 150px; height: auto; }
+  .loader .pct { font: 800 clamp(56px, 9vw, 96px)/0.9 var(--cond); font-variant-numeric: tabular-nums; }
+  .loader .gauge { width: min(320px, 70vw); height: 6px; background: var(--track); transform: skewX(-20deg); overflow: hidden; }
+  .loader .gauge i { display: block; height: 100%; width: 100%; background: var(--lime); transform-origin: left; transform: scaleX(0); }
+  .loader .gate { display: grid; gap: 18px; justify-items: center; opacity: 0; transform: translateY(12px); transition: opacity 500ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; }
+  .loader.ready .gate { opacity: 1; transform: none; pointer-events: auto; }
+  .loader .sound { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 10px; }
+  .loader .sound[aria-pressed="true"] b { color: var(--lime); }
+
+  /* ---------- Fixed HUD ---------- */
+  .bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; align-items: center; gap: 20px;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) clamp(16px, 4vw, 40px) 14px;
+    background: rgba(11, 12, 13, 0.82);
+  }
+  .bar img { height: 22px; width: auto; }
+  .bar .links { display: flex; gap: 26px; margin-left: auto; }
+  .bar .links a { text-decoration: none; }
+  .bar .links a:hover { color: var(--bone); }
+  .bar .sound { background: none; border: 0; cursor: pointer; padding: 8px 4px; white-space: nowrap; min-height: 44px; }
+  .bar .sound[aria-pressed="true"] b { color: var(--lime); }
+  .bar .btn { min-height: 44px; font-size: 17px; padding: 0 18px; }
+  @media (max-width: 860px) { .bar .links { display: none; } .bar .sound { margin-left: auto; } }
+  .cluster {
+    position: fixed; left: clamp(16px, 4vw, 40px); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 20;
+    display: grid; gap: 8px; pointer-events: none;
+  }
+  .cluster .rpm { font: 800 30px/1 var(--cond); font-variant-numeric: tabular-nums; }
+  .cluster .rpmbar { width: 180px; height: 5px; background: var(--track); transform: skewX(-20deg); overflow: hidden; }
+  .cluster .rpmbar i { display: block; height: 100%; width: 100%; background: var(--lime); transform-origin: left; transform: scaleX(0.1); }
+  .cluster .rpmbar.hot i { background: var(--red); }
+  .scrollhint { position: fixed; right: clamp(16px, 4vw, 40px); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 20; pointer-events: none; }
+  @media (max-width: 600px) { .cluster .rpm { font-size: 22px; } .cluster .rpmbar { width: 110px; } }
+
+  .flash { position: fixed; inset: 0; z-index: 40; background: var(--lime); opacity: 0; pointer-events: none; }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; display: grid; align-items: end; overflow: hidden; background: var(--deep); }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero .content { position: relative; display: grid; gap: 28px; padding-block: 140px 120px; }
+  .hero .row { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; }
+
+  /* ---------- Scroll scenes (sticky) ---------- */
+  .scene { position: relative; }
+  .scene .stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+  .scene canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .static .scene { height: auto !important; }
+  .static .scene .stage { position: relative; height: auto; overflow: visible; }
+
+  /* The pull */
+  #pull { height: 520vh; background: var(--deep); }
+  #pull .stage { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
+  #pull .dial { position: relative; min-height: 0; }
+  #pull .side { position: relative; display: grid; align-content: center; gap: 24px; padding: 96px clamp(16px, 4vw, 48px) 96px 0; min-width: 0; }
+  #pull h2 { font-size: clamp(40px, 5vw, 80px); }
+  .readout { position: absolute; left: 50%; top: 60%; transform: translate(-50%, 0); text-align: center; display: grid; gap: 6px; pointer-events: none; }
+  .readout .num { font: 800 clamp(56px, 8vw, 120px)/0.9 var(--cond); font-variant-numeric: tabular-nums; }
+  .beats { list-style: none; margin: 0; padding: 0; position: relative; height: 260px; }
+  .beat {
+    position: absolute; inset: 0 0 auto 0;
+    display: grid; gap: 8px; padding: 26px 28px; background: var(--card);
+    opacity: 0; transform: translateY(60px) scale(0.96);
+    transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1), transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .beat.past { opacity: 0; transform: translateY(-70px) scale(0.92); }
+  .beat.now { opacity: 1; transform: none; }
+  .beat .meta { color: var(--muted); font-size: 15px; }
+  .beat .title { font: 800 clamp(30px, 3vw, 44px)/1 var(--cond); text-transform: uppercase; }
+  .beat .what { font-weight: 600; }
+  .ladder { display: flex; gap: 5px; align-items: center; }
+  .ladder i { width: 22px; height: 7px; background: var(--track); transform: skewX(-20deg); }
+  .ladder i.on { background: var(--lime); }
+  .ladder span { margin-left: 10px; font-weight: 600; font-size: 16px; }
+  .stamp {
+    justify-self: start; margin-top: 4px; padding: 8px 12px;
+    font: 800 16px/1 var(--cond); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--lime); outline: 3px solid var(--lime); outline-offset: -3px;
+    transform: rotate(-3deg) scale(2.2); opacity: 0;
+  }
+  .beat.now .stamp { animation: slam 520ms cubic-bezier(0.2, 1.6, 0.4, 1) 260ms forwards; }
+  @keyframes slam { 0% { transform: rotate(-12deg) scale(2.2); opacity: 0; } 60% { opacity: 1; } 100% { transform: rotate(-3deg) scale(1); opacity: 1; } }
+  .ticks { display: flex; gap: 6px; }
+  .ticks i { flex: 1; height: 4px; background: var(--track); transform: skewX(-20deg); transition: background 300ms; }
+  .ticks i.on { background: var(--lime); }
+  .static #pull .stage { grid-template-columns: minmax(0, 1fr); }
+  .static #pull .dial { height: 70vh; }
+  .static .beats { height: auto; display: grid; gap: 10px; }
+  .static .beat { position: static; opacity: 1; transform: none; }
+  .static .stamp { opacity: 1; transform: rotate(-3deg); }
+  @media (max-width: 900px) {
+    #pull .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: 46% 54%; }
+    #pull .side { padding: 0 16px 28px; align-content: start; gap: 14px; }
+    #pull h2 { font-size: 34px; }
+    .readout { top: auto; bottom: 4%; }
+    .readout .num { font-size: 56px; }
+    .beats { height: 230px; }
+    .beat { padding: 18px 20px; }
+  }
+
+  /* The chain */
+  #chain { height: 420vh; background: var(--asphalt); }
+  #chain .stage { display: grid; grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr); }
+  #chain .left {
+    position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 24px;
+    padding: 100px 0 120px clamp(16px, 4vw, 40px); pointer-events: none; min-width: 0;
+  }
+  #chain h2 { font-size: clamp(40px, 5vw, 84px); max-width: 11ch; }
+  #chain .copy { display: grid; gap: 16px; max-width: 460px; }
+  #chain .steps { display: grid; gap: 6px; }
+  #chain .step { display: grid; gap: 2px; opacity: 0.28; transition: opacity 400ms; }
+  #chain .step.on { opacity: 1; }
+  #chain .step b { font: 800 26px/1 var(--cond); text-transform: uppercase; }
+  #chain .step span { color: var(--muted); font-size: 16px; }
+  .static #chain .stage { min-height: 100vh; }
+  .static #chain .step { opacity: 1; }
+  @media (max-width: 760px) {
+    #chain .stage { grid-template-columns: minmax(0, 1fr); }
+    #chain .left { padding: 84px 16px 96px; }
+    #chain h2 { font-size: 34px; max-width: none; }
+    #chain .step b { font-size: 20px; }
+    #chain .step span { font-size: 14px; }
+  }
+
+  /* Sections in normal flow */
+  section.flow { padding-block: clamp(96px, 14vw, 200px); }
+
+  /* Ladder toy */
+  .toy { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
+  .toy .intro { display: grid; gap: 24px; min-width: 0; }
+  .toy .steps { display: grid; gap: 8px; min-width: 0; }
+  .stepbtn {
+    display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 20px; align-items: center;
+    width: 100%; padding: 22px 24px; text-align: left;
+    background: var(--card); color: var(--bone); border: 0; border-radius: 0; font: inherit; cursor: pointer;
+    transition: background 200ms, transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .stepbtn:hover { transform: translateX(6px); }
+  .stepbtn[aria-pressed="true"] { background: var(--card-2); }
+  .stepbtn b { font: 800 26px/1 var(--cond); text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .stepbtn span.d { color: var(--muted); font-size: 16px; }
+  .view { margin-top: 16px; padding: 28px; background: var(--card-2); display: grid; gap: 10px; }
+  .view .meta { color: var(--muted); font-size: 15px; }
+  .view .title { font: 800 30px/1.05 var(--cond); text-transform: uppercase; }
+  .view .says { font-weight: 600; }
+  @media (max-width: 860px) { .toy { grid-template-columns: minmax(0, 1fr); } .stepbtn { grid-template-columns: 96px minmax(0, 1fr); } }
+
+  /* VIN check */
+  .vin { background: var(--card); }
+  .vin .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); align-items: center; }
+  .vin .intro { display: grid; gap: 24px; min-width: 0; }
+  .vin form { display: grid; gap: 12px; min-width: 0; }
+  .vin label { font-weight: 600; }
+  .vin input {
+    width: 100%; min-height: 64px; padding: 0 18px;
+    font: 700 clamp(20px, 2.4vw, 30px)/1 var(--cond); letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--bone); background: var(--asphalt); border: 0; border-radius: 0;
+  }
+  .vin .result { min-height: 96px; display: grid; align-items: center; justify-items: start; }
+  .verdict { font: 800 clamp(48px, 6vw, 84px)/0.9 var(--cond); text-transform: uppercase; letter-spacing: 0.02em; }
+  .verdict.match { color: var(--lime); animation: thump 500ms cubic-bezier(0.2, 1.6, 0.4, 1); }
+  .verdict.nomatch { color: var(--bone); animation: shake 380ms ease; }
+  @keyframes thump { 0% { transform: scale(1.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-10px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(3px); } }
+  @media (max-width: 860px) { .vin .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Handover */
+  .handover .wrap { display: grid; gap: 40px; }
+  .flap { display: flex; flex-wrap: wrap; gap: clamp(4px, 0.8vw, 10px); perspective: 600px; }
+  .flap span {
+    display: grid; place-items: center;
+    width: clamp(34px, 8.4vw, 116px); height: clamp(52px, 12vw, 160px);
+    background: var(--card); color: var(--lime);
+    font: 800 clamp(34px, 8.6vw, 128px)/1 var(--cond); font-variant-numeric: tabular-nums;
+    transform-origin: 50% 50%;
+  }
+  .flap span.dash { background: transparent; color: var(--muted); width: clamp(18px, 3vw, 44px); }
+  .flap span.flip { animation: flip 90ms linear; }
+  @keyframes flip { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
+  .route { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; }
+  .route .line { position: relative; height: 4px; background: var(--track); transform: skewX(-20deg); overflow: hidden; }
+  .route .line i { position: absolute; inset: 0; background: var(--lime); transform-origin: left; transform: scaleX(0); transition: transform 1600ms cubic-bezier(0.65, 0, 0.35, 1); }
+  .route.go .line i { transform: scaleX(1); }
+  .route .end { font: 800 24px/1 var(--cond); text-transform: uppercase; }
+  .handover .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 5vw, 80px); }
+  @media (max-width: 760px) { .handover .cols { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Horizontal screens track */
+  #track { background: var(--deep); }
+  #track .stage { display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; gap: 32px; }
+  #track h2 { padding-inline: clamp(16px, 4vw, 40px); font-size: clamp(40px, 5.5vw, 88px); }
+  .rail { display: flex; gap: clamp(20px, 3vw, 48px); padding-inline: clamp(16px, 4vw, 40px); will-change: transform; }
+  /* phones always fit the screen's height, with room for the title and caption */
+  .shot { flex: 0 0 auto; width: min(clamp(220px, 24vw, 320px), calc((100svh - 300px) * 0.462)); min-width: 180px; display: grid; gap: 14px; }
+  .shot .phone { border-radius: 26px; overflow: hidden; background: var(--card); }
+  .shot img { width: 100%; height: auto; aspect-ratio: 390 / 844; object-fit: cover; }
+  .shot p { font-size: 16px; color: var(--muted); }
+  .shot p b { color: var(--bone); }
+  .static #track .stage { padding-block: 96px; }
+  .static .rail { overflow-x: auto; }
+
+  /* Shops */
+  .shops .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); }
+  .shops dl { margin: 0; display: grid; gap: 28px; }
+  .shops dt { font: 800 28px/1.05 var(--cond); text-transform: uppercase; }
+  .shops dd { margin: 6px 0 0; color: var(--muted); }
+  @media (max-width: 860px) { .shops .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+  /* FAQ */
+  .faq { background: var(--card); }
+  .faq .wrap { display: grid; gap: 48px; }
+  .faq dl { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px clamp(32px, 5vw, 80px); }
+  .faq dt { font-weight: 600; font-size: 20px; margin-bottom: 8px; }
+  .faq dd { margin: 0; color: var(--muted); }
+  @media (max-width: 760px) { .faq dl { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Close */
+  .close { background: var(--lime); color: var(--on-lime); }
+  .close .wrap { display: grid; gap: 32px; }
+  .close h2 { max-width: 16ch; }
+  @media (max-width: 600px) { .close h2 { font-size: 34px; max-width: none; } }
+  .close form { display: flex; flex-wrap: wrap; gap: 12px; max-width: 640px; }
+  .close label { flex-basis: 100%; font-weight: 600; }
+  .close input {
+    flex: 1 1 260px; min-width: 0; min-height: 54px; padding: 0 16px;
+    font: 500 18px Barlow, system-ui, sans-serif; color: var(--bone);
+    background: var(--asphalt); border: 0; border-radius: 0;
+  }
+  .close .btn { background: var(--asphalt); color: var(--lime); }
+  .close .btn::before, .close .btn::after { border-color: var(--asphalt); }
+  .close .msg { font-weight: 600; min-height: 1.5em; }
+  footer { padding-block: 48px 120px; color: var(--muted); font-size: 15px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between; }
+  footer img { height: 22px; width: auto; }
+
+  /* Entrances */
+  .js:not(.static) .rise { opacity: 0; transform: translateY(28px); transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--i, 0) * 80ms); }
+  .js:not(.static) .rise.in { opacity: 1; transform: none; }
+  .js:not(.static) .lines > * { display: block; overflow: hidden; }
+  .js:not(.static) .lines > * > span { display: block; transform: translateY(105%); transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--i, 0) * 90ms); }
+  .js:not(.static) .lines.in > * > span { transform: none; }
+  /* reduced motion (set by script from prefers-reduced-motion) */
+  .static .btn, .static .stepbtn, .static .beat, .static .route .line i, .static .loader { transition: none; }
+  .static .verdict.match, .static .verdict.nomatch, .static .flap span.flip, .static .beat.now .stamp { animation: none; }
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader" role="dialog" aria-label="Loading Dynorex">
+  <div class="stack">
+    <img src="img/mark.png" alt="" width="240" height="151">
+    <div class="pct" id="pct" aria-hidden="true">000</div>
+    <div class="gauge" aria-hidden="true"><i id="pctbar"></i></div>
+    <div class="gate">
+      <button class="btn" id="start" type="button">Start engine</button>
+      <button class="sound hud" id="sound0" type="button" aria-pressed="false">Sound <b>off</b>. Best with sound on</button>
+    </div>
+  </div>
+</div>
+
+<div class="flash" id="flash" aria-hidden="true"></div>
+
+<header class="bar">
+  <a href="#top" aria-label="Dynorex home"><img src="img/wordmark.png" alt="Dynorex" width="480" height="82"></a>
+  <nav class="links hud" aria-label="Sections">
+    <a href="#pull">The build</a>
+    <a href="#chain">The proof</a>
+    <a href="#vin">The buyer</a>
+    <a href="#shops">Shops</a>
+  </nav>
+  <button class="sound hud" id="sound" type="button" aria-pressed="false">Sound <b>off</b></button>
+  <a class="btn" href="#join">Early access</a>
+</header>
+
+<div class="cluster" aria-hidden="true">
+  <span class="hud">RPM</span>
+  <span class="rpm" id="rpm">0850</span>
+  <span class="rpmbar" id="rpmbar"><i></i></span>
+</div>
+<div class="scrollhint hud" aria-hidden="true" id="hint">Scroll to rev</div>
+
+<main id="top">
+  <!-- Hero -->
+  <section class="hero" aria-labelledby="h1">
+    <canvas id="heroCanvas" aria-hidden="true"></canvas>
+    <div class="wrap content">
+      <h1 id="h1"><span data-scramble>Your build,</span><br><span data-scramble>on record.</span></h1>
+      <p class="lead rise" style="--i:2">Log every mod with the receipt and the shop that fitted it. The shop confirms the work, the buyer sees all of it, and the record goes with the car when you sell.</p>
+      <div class="row rise" style="--i:3">
+        <a class="btn" href="#join">Get early access</a>
+        <span class="hud">Free to log your build · iPhone and Android</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- The pull: scroll is the throttle, the build's own timeline is the dyno sheet -->
+  <section class="scene" id="pull" aria-labelledby="pullh">
+    <div class="stage">
+      <div class="dial">
+        <canvas id="pullCanvas" aria-hidden="true"></canvas>
+        <div class="readout" aria-hidden="true">
+          <span class="num" id="whp">000.0</span>
+          <span class="hud" id="whpLabel">WHP · logged peak</span>
+        </div>
+      </div>
+      <div class="side">
+        <h2 id="pullh">Every pull, every part.</h2>
+        <p class="note">A sample build, a 2015 WRX, as its record tells it. Dyno numbers are owner-reported.</p>
+        <ol class="beats" id="beats">
+          <li class="beat" data-kind="pull" data-peak="236.2">
+            <span class="meta">Jul 15, 2026 · Dyno run · at Garage 42 Tuning</span>
+            <span class="title">236.2 whp / 248 wtq</span>
+            <span class="ladder"><i class="on"></i><i></i><i></i><i></i><span>Owner-entered</span></span>
+          </li>
+          <li class="beat" data-kind="mod">
+            <span class="meta">Jul 20, 2026 · Mod · Engine · fitted by the owner</span>
+            <span class="title">Cold air intake</span>
+            <span class="what">CARB EO D-9001-1 on file</span>
+            <span class="ladder"><i class="on"></i><i></i><i class="on"></i><i></i><span>Part identified</span></span>
+          </li>
+          <li class="beat" data-kind="pull" data-peak="245.8">
+            <span class="meta">Aug 9, 2026 · Dyno run · at Garage 42 Tuning</span>
+            <span class="title">245.8 whp / 256 wtq</span>
+            <span class="ladder"><i class="on"></i><i></i><i></i><i></i><span>Owner-entered</span></span>
+          </li>
+          <li class="beat" data-kind="mod">
+            <span class="meta">Aug 19, 2026 · Mod · Exhaust · fitted by Garage 42 Tuning</span>
+            <span class="title">Cat-back exhaust</span>
+            <span class="ladder"><i class="on"></i><i></i><i class="on"></i><i class="on"></i><span>Shop-confirmed</span></span>
+            <span class="stamp">Confirmed by Garage 42 Tuning · Aug 21</span>
+          </li>
+          <li class="beat" data-kind="pull" data-peak="253.9">
+            <span class="meta">Aug 29, 2026 · Dyno run · at Garage 42 Tuning</span>
+            <span class="title">253.9 whp / 247 wtq</span>
+            <span class="what">Dyno sheet uploaded with it</span>
+            <span class="ladder"><i class="on"></i><i class="on"></i><i></i><i></i><span>Paperwork on file</span></span>
+          </li>
+        </ol>
+        <div class="ticks" id="ticks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The chain: the record as a constellation of who said what -->
+  <section class="scene" id="chain" aria-labelledby="chainh">
+    <div class="stage">
+      <canvas id="chainCanvas" aria-hidden="true"></canvas>
+      <div class="left">
+      <h2 id="chainh">Every mod shows what backs it.</h2>
+      <div class="copy">
+        <p class="note">Nothing gets called verified. A buyer sees who said what, and when.</p>
+        <div class="steps" id="chainSteps">
+          <div class="step"><b>Owner-entered</b><span>The owner logged it.</span></div>
+          <div class="step"><b>Paperwork on file</b><span>A receipt or dyno sheet was uploaded with it.</span></div>
+          <div class="step"><b>Part identified</b><span>A part number or CARB EO number is recorded.</span></div>
+          <div class="step"><b>Shop-confirmed</b><span>The shop that did the work confirmed it.</span></div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Try the ladder -->
+  <section class="flow">
+    <div class="wrap toy">
+      <div class="intro">
+        <h2 class="lines"><span><span>Tap a step.</span></span></h2>
+        <p class="lead rise">The same exhaust, the way a buyer reads it at each step. The ladder isn't a score: an entry can be shop-confirmed with no receipt on file.</p>
+      </div>
+      <div class="steps" role="group" aria-label="Evidence steps">
+        <button class="stepbtn rise" type="button" data-step="0" aria-pressed="false">
+          <span class="ladder" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+          <span><b>Owner-entered</b><span class="d">The owner logged it.</span></span>
+        </button>
+        <button class="stepbtn rise" style="--i:1" type="button" data-step="1" aria-pressed="false">
+          <span class="ladder" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></span>
+          <span><b>Paperwork on file</b><span class="d">A receipt or dyno sheet was uploaded.</span></span>
+        </button>
+        <button class="stepbtn rise" style="--i:2" type="button" data-step="2" aria-pressed="false">
+          <span class="ladder" aria-hidden="true"><i class="on"></i><i></i><i class="on"></i><i></i></span>
+          <span><b>Part identified</b><span class="d">A part number or CARB EO number.</span></span>
+        </button>
+        <button class="stepbtn rise" style="--i:3" type="button" data-step="3" aria-pressed="true">
+          <span class="ladder" aria-hidden="true"><i class="on"></i><i></i><i></i><i class="on"></i></span>
+          <span><b>Shop-confirmed</b><span class="d">The shop that did the work confirmed it.</span></span>
+        </button>
+        <div class="view rise" style="--i:4" aria-live="polite">
+          <span class="meta">Aug 19, 2026 · Mod · Exhaust · sample entry</span>
+          <span class="title">Cat-back exhaust</span>
+          <span class="says" id="says">Confirmed by Garage 42 Tuning on Aug 21, 2026.</span>
+          <span class="note" id="means">The shop named on the entry confirmed the job through a one-time link.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIN check, live -->
+  <section class="flow vin" id="vin" aria-labelledby="vinh">
+    <div class="wrap">
+      <div class="intro">
+        <h2 id="vinh" class="lines"><span><span>Is this the car</span></span><span><span>in front of you?</span></span></h2>
+        <p class="lead rise">A buyer opens your link and types the VIN off the windshield. Match or no match. They never see yours, or your name, costs or notes.</p>
+      </div>
+      <form id="vinForm" novalidate class="rise" style="--i:1">
+        <label for="vinInput">VIN on the car</label>
+        <input id="vinInput" maxlength="20" autocomplete="off" spellcheck="false" autocapitalize="characters" placeholder="17 characters">
+        <button class="btn" type="submit">Check VIN</button>
+        <div class="result" role="status" aria-live="polite"><span class="verdict" id="verdict"></span></div>
+        <p class="note">Demo against the sample WRX. Try JF1VA1A60F9800012, then change one character.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Handover -->
+  <section class="flow handover" aria-labelledby="hoh">
+    <div class="wrap">
+      <h2 id="hoh" class="lines"><span><span>Sold it? Hand over</span></span><span><span>the record.</span></span></h2>
+      <div class="flap" id="flap" aria-label="Sample transfer code K 7 R M dash 4 X Q 2" role="img"></div>
+      <div class="route" id="route" aria-hidden="true"><span class="end">Seller</span><span class="line"><i></i></span><span class="end">Buyer</span></div>
+      <div class="cols">
+        <p class="lead rise">Give the buyer a one-time code. With the VIN off the car, the whole history lands in their garage, every entry, edit and shop confirmation.</p>
+        <p class="note rise" style="--i:1">Your photos, costs and notes stay with you. Your copy becomes read-only, and the code expires after 14 days. The code above is a sample.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- The app, sideways -->
+  <section class="scene" id="track" aria-labelledby="trackh">
+    <div class="stage">
+      <h2 id="trackh">The whole record, in your pocket.</h2>
+      <div class="rail" id="rail">
+        <figure class="shot" style="margin:0"><div class="phone"><img src="img/record.jpg" width="390" height="844" loading="lazy" alt="The Build Record screen for a 2015 Subaru WRX: 11 entries, 2 shop-confirmed, with a button to make a buyer's link."></div><p><b>The record.</b> Every entry, what backs it, and what's waiting on a shop.</p></figure>
+        <figure class="shot" style="margin:0"><div class="phone"><img src="img/entries.jpg" width="390" height="844" loading="lazy" alt="Entries on the record: a dyno run with paperwork on file, and a cat-back exhaust confirmed by Garage 42 Tuning."></div><p><b>The entries.</b> Dyno runs, mods and service, each with its paperwork.</p></figure>
+        <figure class="shot" style="margin:0"><div class="phone"><img src="img/vin-check.jpg" width="390" height="844" loading="lazy" alt="The buyer's view of the record with a VIN typed in and the result: this VIN matches the record."></div><p><b>The buyer's view.</b> Check the VIN without ever seeing it.</p></figure>
+        <figure class="shot" style="margin:0"><div class="phone"><img src="img/transfer.jpg" width="390" height="844" loading="lazy" alt="The transfer section of the record showing a one-time code that works for 14 days."></div><p><b>The handover.</b> One code, and the record moves with the car.</p></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shops -->
+  <section class="flow shops" id="shops" aria-labelledby="shopsh">
+    <div class="wrap">
+      <div style="display:grid; gap:24px; min-width:0">
+        <h2 id="shopsh" class="lines"><span><span>Shops: your name</span></span><span><span>on good work.</span></span></h2>
+        <p class="lead rise">When a customer logs a job you did, they send you a link. Two taps and the record says you did it, with the date.</p>
+      </div>
+      <dl>
+        <div class="rise"><dt>No account</dt><dd>The link works once. You see the job, not the customer's personal details or VIN.</dd></div>
+        <div class="rise" style="--i:1"><dt>Only street-legal work</dt><dd>Engine, exhaust and electronics mods carry an emissions status. Shops are only asked to confirm work that's street legal.</dd></div>
+        <div class="rise" style="--i:2"><dt>Say no if it's wrong</dt><dd>Decline a job you didn't do, and the buyer sees that too.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="flow faq" aria-labelledby="faqh">
+    <div class="wrap">
+      <h2 id="faqh" class="lines"><span><span>Questions</span></span></h2>
+      <dl>
+        <div class="rise"><dt>Is this a vehicle history report?</dt><dd>No. It doesn't cover accidents or titles. It covers what's been done to the car, and who says so.</dd></div>
+        <div class="rise" style="--i:1"><dt>Can't people fake receipts?</dt><dd>They can, which is why a receipt is only one step. Buyers see which mods the shop confirmed, and every edit.</dd></div>
+        <div class="rise"><dt>What does it cost?</dt><dd>Logging your build is free.</dd></div>
+        <div class="rise" style="--i:1"><dt>When can I use it?</dt><dd>It's built and in testing. Join the list and we'll invite you in small groups.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Close -->
+  <section id="join" class="flow close" aria-labelledby="joinh">
+    <div class="wrap">
+      <h2 id="joinh">Get your build on record before you sell.</h2>
+      <form id="waitlist" novalidate>
+        <label for="email">Email for your invite</label>
+        <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <button class="btn" type="submit">Get early access</button>
+        <p class="msg" id="msg" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="img/wordmark.png" alt="Dynorex" width="480" height="82">
+    <span>Estimates based on user-reported data. Dynorex is not responsible for accuracy.</span>
+    <span>Screens and the WRX build show sample data.</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+(() => {
+  const root = document.documentElement;
+  root.classList.add('js');
+  // Reduced motion gets a still page. Adding #motion to the link plays the full show anyway (for demos).
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches && location.hash !== '#motion';
+  if (reduced) root.classList.add('static');
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const easeIn = (t) => t * t * t;
+  const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+
+  const C = { lime: '#AAFF00', red: '#E00000', bone: '#F2EFE8', muted: '#B9B5AC', track: '#2A2E31', card: '#1A1D1F', deep: '#0B0C0D', asphalt: '#111315' };
+  const MAX_RPM = 8000, REDLINE = 6500 / MAX_RPM, IDLE = 850;
+
+  /* ---------------- Engine sound: synthesized, opt-in, starts only from a click ---------------- */
+  const engine = (() => {
+    let ctx = null, o1, o2, filt, out, on = false, rpm = IDLE;
+    const build = () => {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ctx = new AC();
+      o1 = ctx.createOscillator(); o1.type = 'sawtooth';
+      o2 = ctx.createOscillator(); o2.type = 'square';
+      const sub = ctx.createGain(); sub.gain.value = 0.4;
+      filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.Q.value = 7;
+      out = ctx.createGain(); out.gain.value = 0;
+      // a lumpy idle: a slow wobble on the volume
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 7;
+      const lfoAmt = ctx.createGain(); lfoAmt.gain.value = 0.012;
+      lfo.connect(lfoAmt).connect(out.gain);
+      o1.connect(filt); o2.connect(sub).connect(filt); filt.connect(out).connect(ctx.destination);
+      o1.start(); o2.start(); lfo.start();
+      return true;
+    };
+    const set = (r) => {
+      rpm = r;
+      if (!ctx || !on) return;
+      const t = ctx.currentTime, f = (r / 60) * 2; // four cylinders: two firings per revolution
+      o1.frequency.setTargetAtTime(f, t, 0.04);
+      o2.frequency.setTargetAtTime(f / 2, t, 0.04);
+      filt.frequency.setTargetAtTime(220 + r * 0.32, t, 0.05);
+    };
+    const toggle = (want) => {
+      on = want;
+      if (on && !ctx && !build()) { on = false; return false; }
+      if (ctx) {
+        if (ctx.state === 'suspended') ctx.resume();
+        out.gain.setTargetAtTime(on ? 0.05 : 0, ctx.currentTime, 0.12);
+      }
+      set(rpm);
+      return on;
+    };
+    return { set, toggle, get on() { return on; } };
+  })();
+
+  const soundBtns = [$('#sound'), $('#sound0')];
+  const paintSound = () => soundBtns.forEach((b) => {
+    b.setAttribute('aria-pressed', String(engine.on));
+    b.querySelector('b').textContent = engine.on ? 'on' : 'off';
+  });
+  soundBtns.forEach((b) => b.addEventListener('click', () => { engine.toggle(!engine.on); paintSound(); }));
+
+  /* ---------------- Shared tachometer drawing ---------------- */
+  const ang = (f) => Math.PI * 0.75 + f * Math.PI * 1.5;
+  function tach(c, cx, cy, R, v, o = {}) {
+    v = clamp(v);
+    const hot = v > REDLINE;
+    c.save();
+    c.lineCap = 'butt';
+    const band = (from, to, r, w, col) => { if (to <= from) return; c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.arc(cx, cy, r, ang(from), ang(to)); c.stroke(); };
+    band(0, 1, R * 0.86, R * 0.07, C.track);
+    band(REDLINE, 1, R * 0.86, R * (hot ? 0.11 : 0.07), C.red);
+    band(0, Math.min(v, REDLINE), R * 0.86, R * 0.07, C.lime);
+    for (let i = 0; i <= 16; i++) {
+      const f = i / 16, a = ang(f), major = i % 2 === 0;
+      const r0 = R * (major ? 0.64 : 0.7), r1 = R * 0.76;
+      c.strokeStyle = f >= REDLINE ? C.red : major ? C.bone : C.muted;
+      c.lineWidth = major ? R * 0.022 : R * 0.012;
+      c.beginPath(); c.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); c.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); c.stroke();
+      if (major && o.numbers) {
+        c.fillStyle = C.bone;
+        c.font = `800 ${Math.round(R * 0.11)}px "Barlow Condensed", sans-serif`;
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(String(i / 2), cx + Math.cos(a) * R * 0.52, cy + Math.sin(a) * R * 0.52);
+      }
+    }
+    // blade needle
+    const a = ang(v), tip = R * 0.78, tail = R * 0.16, w = R * 0.035;
+    c.fillStyle = hot ? C.red : C.lime;
+    c.beginPath();
+    c.moveTo(cx + Math.cos(a) * tip, cy + Math.sin(a) * tip);
+    c.lineTo(cx + Math.cos(a + Math.PI / 2) * w, cy + Math.sin(a + Math.PI / 2) * w);
+    c.lineTo(cx - Math.cos(a) * tail, cy - Math.sin(a) * tail);
+    c.lineTo(cx + Math.cos(a - Math.PI / 2) * w, cy + Math.sin(a - Math.PI / 2) * w);
+    c.closePath(); c.fill();
+    // hex hub
+    c.fillStyle = C.deep; c.strokeStyle = hot ? C.red : C.lime; c.lineWidth = R * 0.02;
+    c.beginPath();
+    for (let i = 0; i < 6; i++) { const h = (i / 6) * Math.PI * 2; c[i ? 'lineTo' : 'moveTo'](cx + Math.cos(h) * R * 0.07, cy + Math.sin(h) * R * 0.07); }
+    c.closePath(); c.fill(); c.stroke();
+    c.restore();
+  }
+
+  /* Canvas sizing */
+  const canvases = new Map();
+  function fit(cv) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return null;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const c = cv.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { c, w, h };
+  }
+
+  /* Speed streaks (the app's splash slashes), faster with the revs */
+  const streaks = Array.from({ length: 26 }, () => ({ x: Math.random(), y: Math.random(), len: 0.05 + Math.random() * 0.18, s: 0.4 + Math.random() }));
+  function drawStreaks(c, w, h, rpmFrac, dt, col) {
+    c.save();
+    c.strokeStyle = col; c.lineWidth = 2;
+    for (const s of streaks) {
+      s.x -= s.s * (0.05 + rpmFrac * 1.6) * dt;
+      if (s.x + s.len < -0.1) { s.x = 1.1; s.y = Math.random(); }
+      c.globalAlpha = 0.05 + rpmFrac * 0.35;
+      const x = s.x * w, y = s.y * h, l = s.len * w * (0.4 + rpmFrac);
+      c.beginPath(); c.moveTo(x, y); c.lineTo(x + l, y - l * 0.18); c.stroke();
+    }
+    c.restore();
+  }
+
+  /* ---------------- Scroll progress for sticky scenes ---------------- */
+  const progress = (el) => {
+    const r = el.getBoundingClientRect();
+    const span = r.height - innerHeight;
+    return span <= 0 ? 0 : clamp(-r.top / span);
+  };
+  const onScreen = (el) => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; };
+
+  /* ---------------- The pull ---------------- */
+  const pull = $('#pull'), beats = $$('.beat'), ticks = $$('#ticks i');
+  const whpEl = $('#whp'), whpLabel = $('#whpLabel');
+  let lastBeat = -1, flashedBeat = -1;
+  function pullState(p) {
+    const n = beats.length, x = p * n, i = Math.min(n - 1, Math.floor(x)), t = x - i;
+    const b = beats[i];
+    let rpm = IDLE + 150 * Math.sin(t * Math.PI);
+    // the readout only ever shows logged peaks: no made-up numbers in between, no invented dyno curve
+    const prev = beats.slice(0, i).reverse().find((x) => x.dataset.kind === 'pull');
+    let whp = prev ? Number(prev.dataset.peak) : 0;
+    if (b.dataset.kind === 'pull') {
+      const peak = Number(b.dataset.peak);
+      if (t < 0.12) rpm = lerp(IDLE, 2400, t / 0.12);
+      else if (t < 0.8) rpm = lerp(2400, 7700, easeIn((t - 0.12) / 0.68));
+      else rpm = lerp(7700, 2200, easeOut((t - 0.8) / 0.2));
+      // at the top of the pull the new logged peak rolls in
+      if (t >= 0.72) whp = lerp(whp, peak, easeOut(clamp((t - 0.72) / 0.08)));
+    }
+    return { i, t, rpm, whp };
+  }
+
+  /* ---------------- The chain (constellation) ---------------- */
+  // positions as fractions of the stage; real entries from the sample record
+  const NODES = [
+    { id: 'car', x: 0.62, y: 0.5, label: '2015 Subaru WRX', big: true },
+    { id: 'clutch', x: 0.43, y: 0.25, label: 'Clutch replacement', prev: true },
+    { id: 'shifter', x: 0.52, y: 0.16, label: 'Short shifter', prev: true, shop: 'pine' },
+    { id: 'brake', x: 0.75, y: 0.2, label: 'Brake fluid flush' },
+    { id: 'intake', x: 0.86, y: 0.36, label: 'Cold air intake', part: 'CARB EO D-9001-1' },
+    { id: 'exhaust', x: 0.88, y: 0.62, label: 'Cat-back exhaust', part: 'CARB EO D-9002-3', shop: 'g42' },
+    { id: 'dyno', x: 0.74, y: 0.8, label: 'Dyno run, 253.9 whp', paper: 'Dyno sheet' },
+    { id: 'wheels', x: 0.5, y: 0.82, label: 'Lightweight wheels', note: 'Edited once' },
+    { id: 'align', x: 0.4, y: 0.62, label: 'Wheel alignment', flag: 'Removed by the owner' },
+    { id: 'g42', x: 0.97, y: 0.9, label: 'Garage 42 Tuning', shopNode: true },
+    { id: 'pine', x: 0.3, y: 0.08, label: 'Pinecrest Auto', shopNode: true },
+  ];
+  const byId = Object.fromEntries(NODES.map((n) => [n.id, n]));
+  // phones: two columns of entries either side of the car, so labels never collide
+  const PHONE = {
+    car: [0.5, 0.5], pine: [0.1, 0.04], shifter: [0.1, 0.18], clutch: [0.1, 0.36], align: [0.1, 0.62], wheels: [0.1, 0.84],
+    brake: [0.9, 0.08], intake: [0.9, 0.3], exhaust: [0.9, 0.58], dyno: [0.9, 0.8], g42: [0.9, 1.0],
+  };
+  let mx = 0, my = 0;
+  addEventListener('pointermove', (e) => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; }, { passive: true });
+
+  function drawChain(c, w, h, p, time) {
+    const stage = clamp(p * 4.4, 0, 4); // 0..4: one step of the ladder at a time
+    const narrow = w < 760;
+    const pos = (n) => {
+      const drift = Math.sin(time * 0.0004 + n.x * 9) * (narrow ? 2 : 6);
+      // wide: the right 55% of the stage, beside the copy. Phone: the band between the headline and the steps.
+      const x = narrow ? PHONE[n.id][0] : 0.46 + (n.x - 0.3) * 0.74;
+      const y = narrow ? 0.21 + PHONE[n.id][1] * 0.38 : 0.1 + n.y * 0.8;
+      return [x * w + mx * -24 * (n.big ? 0.4 : 1) + drift, y * h + my * -18 + drift * 0.6];
+    };
+    const line = (a, b, prog, col, width) => {
+      if (prog <= 0) return;
+      const [x0, y0] = pos(a), [x1, y1] = pos(b);
+      c.strokeStyle = col; c.lineWidth = width;
+      c.beginPath(); c.moveTo(x0, y0); c.lineTo(lerp(x0, x1, prog), lerp(y0, y1, prog)); c.stroke();
+    };
+    const cross = (x, y, s, col) => { c.strokeStyle = col; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - s, y); c.lineTo(x + s, y); c.moveTo(x, y - s); c.lineTo(x, y + s); c.stroke(); };
+    const label = (x, y, text, col, size = 14, weight = 600) => {
+      if (narrow) size = Math.max(11, size - 3);
+      c.fillStyle = col; c.font = `${weight} ${size}px Barlow, sans-serif`; c.textBaseline = 'middle';
+      c.textAlign = x > w * (narrow ? 0.6 : 0.8) ? 'right' : 'left';
+      c.fillText(text, x + (c.textAlign === 'right' ? -14 : 14), y);
+    };
+    const car = byId.car;
+    // step 1: the owner's entries
+    const s1 = clamp(stage);
+    NODES.filter((n) => !n.big && !n.shopNode).forEach((n, k) => {
+      const prog = clamp(s1 * 1.6 - k * 0.07);
+      line(car, n, prog, 'rgba(242,239,232,0.28)', 1.5);
+      if (prog >= 1) {
+        const [x, y] = pos(n);
+        cross(x, y, 7, n.flag ? C.red : C.bone);
+        label(x, y, n.label, n.flag ? C.muted : C.bone);
+        let dy = narrow ? 14 : 18;
+        const gap = narrow ? 13 : 16;
+        // phones get the story lines only (paperwork, part numbers, flags); the asides need a wider screen
+        if (n.prev && !narrow) { label(x, y + dy, 'Logged by an earlier owner', C.muted, 13, 500); dy += gap; }
+        if (n.note && !narrow) { label(x, y + dy, n.note, C.muted, 13, 500); dy += gap; }
+        if (n.flag) { label(x, y + dy, '⚑ ' + n.flag, C.muted, 13, 500); dy += gap; }
+        n._dy = dy;
+      }
+    });
+    // step 2: paperwork
+    const s2 = clamp(stage - 1);
+    NODES.filter((n) => n.paper).forEach((n) => {
+      if (s2 <= 0) return;
+      const [x, y] = pos(n);
+      c.globalAlpha = s2; label(x, y + (n._dy || 18), '▣ ' + n.paper, C.lime, 13, 600); c.globalAlpha = 1;
+    });
+    // step 3: part numbers
+    const s3 = clamp(stage - 2);
+    NODES.filter((n) => n.part).forEach((n) => {
+      if (s3 <= 0) return;
+      const [x, y] = pos(n);
+      c.globalAlpha = s3; label(x, y + (n._dy || 18), n.part, C.lime, 13, 600); c.globalAlpha = 1;
+    });
+    // step 4: the shops confirm their work
+    const s4 = clamp(stage - 3);
+    NODES.filter((n) => n.shopNode).forEach((s) => {
+      const [x, y] = pos(s);
+      c.globalAlpha = clamp(s4 * 2);
+      c.fillStyle = C.lime; c.fillRect(x - 6, y - 6, 12, 12);
+      label(x, y, s.label, C.lime, 15, 700);
+      c.globalAlpha = 1;
+    });
+    NODES.filter((n) => n.shop).forEach((n) => line(byId[n.shop], n, clamp(s4 * 1.5), C.lime, 2.5));
+    // the car
+    const [cx, cy] = pos(car);
+    c.fillStyle = C.lime; c.beginPath();
+    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + time * 0.0005; c[i ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * 12, cy + Math.sin(a) * 12); }
+    c.closePath(); c.fill();
+    c.fillStyle = C.bone; c.font = `800 ${narrow ? 15 : 22}px "Barlow Condensed", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'top';
+    c.fillText(narrow ? 'SAMPLE WRX' : '2015 SUBARU WRX · SAMPLE', cx, cy + (narrow ? 16 : 22));
+    return Math.min(3, Math.floor(stage));
+  }
+
+  /* ---------------- One loop drives every scene ---------------- */
+  const hero = $('#heroCanvas'), pullCv = $('#pullCanvas'), chain = $('#chain'), chainCv = $('#chainCanvas');
+  const rpmEl = $('#rpm'), rpmBar = $('#rpmbar'), rpmFill = $('#rpmbar i'), flash = $('#flash'), hint = $('#hint');
+  let rpm = IDLE, target = IDLE, last = performance.now(), lastY = scrollY, vel = 0, blip = 0, started = false;
+
+  function doFlash() {
+    if (reduced) return;
+    flash.animate([{ opacity: 0.22 }, { opacity: 0 }], { duration: 260, easing: 'ease-out' });
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    // scrolling revs the engine a little everywhere on the page
+    const y = scrollY; vel = lerp(vel, Math.abs(y - lastY) / Math.max(dt, 0.001), 0.15); lastY = y;
+    target = IDLE + Math.min(2600, vel * 1.4) + blip;
+    blip *= 0.9;
+
+    // the pull scene owns the needle while it's on screen
+    let pullOn = onScreen(pull);
+    if (pullOn) {
+      const p = progress(pull), s = pullState(p);
+      target = s.rpm + blip;
+      if (s.i !== lastBeat) {
+        beats.forEach((b, k) => { b.classList.toggle('now', k === s.i); b.classList.toggle('past', k < s.i); });
+        ticks.forEach((t, k) => t.classList.toggle('on', k <= s.i));
+        lastBeat = s.i;
+      }
+      if (s.rpm > 7500 && flashedBeat !== s.i) { flashedBeat = s.i; doFlash(); }
+      if (s.whp != null) whpEl.textContent = s.whp.toFixed(1).padStart(5, '0');
+      whpLabel.textContent = 'WHP · last logged peak · owner-reported';
+    }
+
+    rpm = lerp(rpm, target, reduced ? 1 : 0.18);
+    const idleJitter = rpm < 1200 ? Math.sin(now * 0.02) * 18 : 0;
+    const shown = Math.round(rpm + idleJitter);
+    rpmEl.textContent = String(shown).padStart(4, '0');
+    rpmFill.style.transform = `scaleX(${clamp(shown / MAX_RPM)})`;
+    rpmBar.classList.toggle('hot', shown / MAX_RPM > REDLINE);
+    engine.set(shown);
+    hint.style.opacity = y > 200 ? 0 : 1;
+
+    // hero: a huge idling tach behind the headline
+    if (onScreen(hero)) {
+      const f = fit(hero);
+      if (f) {
+        const { c, w, h } = f;
+        c.clearRect(0, 0, w, h);
+        drawStreaks(c, w, h, clamp(shown / MAX_RPM), dt, C.bone);
+        // the dial keeps clear of the headline: right half on wide screens, top half on phones
+        const wide = w >= 760;
+        const R = wide ? Math.min(w * 0.22, h * 0.4) : Math.min(w * 0.4, h * 0.24);
+        const hx = wide ? w * 0.75 : w * 0.5, hy = wide ? h * 0.44 : h * 0.3;
+        tach(c, hx + mx * -24, hy + my * -16, R, shown / MAX_RPM, { numbers: true });
+      }
+    }
+    if (pullOn) {
+      const f = fit(pullCv);
+      if (f) {
+        const { c, w, h } = f;
+        c.clearRect(0, 0, w, h);
+        drawStreaks(c, w, h, clamp(shown / MAX_RPM), dt, C.lime);
+        // on phones the dial sits below the fixed bar, with the readout under its hub
+        const phone = innerWidth < 900;
+        const R = Math.min(w, h) * (phone ? 0.36 : 0.42);
+        tach(c, w / 2, h * (phone ? 0.58 : 0.46), R, shown / MAX_RPM, { numbers: true });
+      }
+    }
+    if (onScreen(chain)) {
+      const f = fit(chainCv);
+      if (f) {
+        const { c, w, h } = f;
+        c.clearRect(0, 0, w, h);
+        const step = drawChain(c, w, h, reduced ? 1 : progress(chain), reduced ? 0 : now);
+        $$('#chainSteps .step').forEach((el, k) => el.classList.toggle('on', reduced || k <= step));
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------------- Horizontal rail ---------------- */
+  const track = $('#track'), rail = $('#rail');
+  function sizeTrack() {
+    if (reduced) return;
+    const extra = Math.max(0, rail.scrollWidth - innerWidth);
+    track.style.height = `${innerHeight + extra}px`;
+  }
+  function moveRail() {
+    if (reduced) return;
+    const extra = Math.max(0, rail.scrollWidth - innerWidth);
+    rail.style.transform = `translate3d(${-progress(track) * extra}px,0,0)`;
+  }
+
+  /* ---------------- Text effects ---------------- */
+  const GLYPHS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  function scramble(el, ms = 900) {
+    const final = el.textContent;
+    if (reduced) return;
+    el.setAttribute('aria-label', final);
+    const t0 = performance.now();
+    const step = (now) => {
+      const p = clamp((now - t0) / ms);
+      el.textContent = [...final].map((ch, i) => (ch === ' ' || ch === ',' || ch === '.' || p > (i + 1) / final.length) ? ch : GLYPHS[(Math.random() * GLYPHS.length) | 0]).join('');
+      if (p < 1) requestAnimationFrame(step); else { el.textContent = final; el.removeAttribute('aria-label'); }
+    };
+    requestAnimationFrame(step);
+  }
+
+  /* Split-flap transfer code */
+  const CODE = 'K7RM-4XQ2';
+  const flapEl = $('#flap');
+  flapEl.innerHTML = [...CODE].map((ch) => `<span class="${ch === '-' ? 'dash' : ''}" aria-hidden="true">${ch}</span>`).join('');
+  function flipCode() {
+    if (reduced) return;
+    const cells = $$('span', flapEl);
+    cells.forEach((cell, i) => {
+      if (CODE[i] === '-') return;
+      let n = 8 + i * 3;
+      const tick = () => {
+        cell.classList.remove('flip'); void cell.offsetWidth; cell.classList.add('flip');
+        cell.textContent = n > 0 ? GLYPHS[(Math.random() * GLYPHS.length) | 0] : CODE[i];
+        if (n-- > 0) setTimeout(tick, 70); else blip = Math.max(blip, 600);
+      };
+      setTimeout(tick, i * 40);
+    });
+  }
+
+  /* Entrances, once */
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      el.classList.add('in');
+      if (el.id === 'flap') { flipCode(); $('#route').classList.add('go'); }
+      io.unobserve(el);
+    });
+  }, { rootMargin: '0px 0px -10% 0px' }) : null;
+  $$('.lines').forEach((h) => $$(':scope > span', h).forEach((s, i) => s.style.setProperty('--i', i)));
+  $$('.rise, .lines, #flap').forEach((el) => (io ? io.observe(el) : el.classList.add('in')));
+  if (reduced) { $('#route').classList.add('go'); }
+
+  /* Ladder toy */
+  const VIEWS = [
+    ['Owner-entered.', 'The owner wrote this entry. Nothing else backs it yet.'],
+    ['Receipt uploaded Aug 19, 2026.', "Dynorex sets the upload date, so it can't be backdated."],
+    ['CARB EO D-9002-3.', 'The part is identified, so a buyer can look it up.'],
+    ['Confirmed by Garage 42 Tuning on Aug 21, 2026.', 'The shop named on the entry confirmed the job through a one-time link.'],
+  ];
+  const stepBtns = $$('.stepbtn');
+  stepBtns.forEach((btn) => btn.addEventListener('click', () => {
+    stepBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    const [says, means] = VIEWS[Number(btn.dataset.step)];
+    $('#says').textContent = says; $('#means').textContent = means;
+    blip = Math.max(blip, 400 + Number(btn.dataset.step) * 500);
+  }));
+
+  /* VIN check (demo against the sample WRX only) */
+  const SAMPLE_VIN = 'JF1VA1A60F9800012';
+  $('#vinForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = $('#vinInput').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const out = $('#verdict');
+    out.className = 'verdict';
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)) {
+      out.textContent = "That's not a VIN yet";
+      out.style.fontSize = 'clamp(26px, 3vw, 40px)';
+      return;
+    }
+    out.style.fontSize = '';
+    const ok = v === SAMPLE_VIN;
+    out.textContent = '';
+    void out.offsetWidth;
+    out.textContent = ok ? 'Match' : 'No match';
+    out.classList.add(ok ? 'match' : 'nomatch');
+    if (ok) { blip = Math.max(blip, 3500); doFlash(); }
+  });
+
+  /* Waitlist: not connected yet. Never pretend it worked. */
+  $('#waitlist').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = $('#email'), msg = $('#msg');
+    if (!email.checkValidity()) { msg.textContent = 'Enter an email address like name@example.com.'; email.focus(); return; }
+    msg.textContent = "The waitlist isn't connected yet, so nothing was saved. This is a draft page.";
+  });
+
+  /* Magnetic buttons (fine pointers only) */
+  if (!reduced && matchMedia('(pointer: fine)').matches) {
+    $$('.btn').forEach((b) => {
+      b.addEventListener('pointermove', (e) => {
+        const r = b.getBoundingClientRect();
+        b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.18}px, ${(e.clientY - r.top - r.height / 2) * 0.3}px)`;
+      });
+      b.addEventListener('pointerleave', () => { b.style.transform = ''; });
+    });
+  }
+
+  /* ---------------- Preloader and ignition ---------------- */
+  const loader = $('#loader'), pct = $('#pct'), pctBar = $('#pctbar');
+  const imgs = $$('img');
+  let loaded = 0, shownPct = 0;
+  const count = () => { loaded++; };
+  imgs.forEach((im) => (im.complete ? count() : (im.addEventListener('load', count), im.addEventListener('error', count))));
+  const t0 = performance.now();
+  const minMs = reduced ? 1 : 1400;
+  (function tickLoad(now) {
+    const real = (loaded / Math.max(1, imgs.length)) * (document.fonts && document.fonts.status === 'loaded' ? 1 : 0.9);
+    const timed = clamp((now - t0) / minMs);
+    const goal = Math.min(real, timed) * 100;
+    shownPct = lerp(shownPct, goal, 0.12);
+    if (goal >= 99.5 && shownPct > 99) shownPct = 100;
+    pct.textContent = String(Math.round(shownPct)).padStart(3, '0');
+    pctBar.style.transform = `scaleX(${shownPct / 100})`;
+    if (shownPct < 100) requestAnimationFrame(tickLoad);
+    else { loader.classList.add('ready'); $('#start').focus({ preventScroll: true }); }
+  })(t0);
+  // never trap anyone: after 6 s the gate opens regardless
+  setTimeout(() => { loader.classList.add('ready'); }, 6000);
+
+  function ignite() {
+    if (started) return;
+    started = true;
+    loader.classList.add('gone');
+    loader.setAttribute('aria-hidden', 'true');
+    blip = 4200; // the starter catches and the revs flare
+    $$('[data-scramble]').forEach((el, i) => setTimeout(() => scramble(el, 900), 250 + i * 160));
+    setTimeout(() => $$('.hero .rise').forEach((el) => el.classList.add('in')), 500);
+  }
+  $('#start').addEventListener('click', ignite);
+  addEventListener('keydown', (e) => { if (!started && loader.classList.contains('ready') && (e.key === 'Escape')) ignite(); });
+  addEventListener('wheel', () => { if (!started && loader.classList.contains('ready')) ignite(); }, { passive: true });
+  addEventListener('touchmove', () => { if (!started && loader.classList.contains('ready')) ignite(); }, { passive: true });
+
+  /* Smooth scroll (optional; off with reduced motion) */
+  if (!reduced && window.Lenis) {
+    const lenis = new window.Lenis({ lerp: 0.09, smoothWheel: true });
+    window.dynorexLenis = lenis;
+    const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+    $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
+      const el = $(a.getAttribute('href'));
+      if (el) { e.preventDefault(); lenis.scrollTo(el, { offset: -70 }); }
+    }));
+  }
+
+  addEventListener('resize', sizeTrack);
+  addEventListener('scroll', moveRail, { passive: true });
+  addEventListener('load', () => { sizeTrack(); moveRail(); });
+  sizeTrack();
+  requestAnimationFrame(frame);
+  if (reduced) { loader.classList.add('ready'); }
+})();
+</script>
+</body>
+</html>

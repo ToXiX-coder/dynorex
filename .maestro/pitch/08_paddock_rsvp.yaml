@@ -1,0 +1,16 @@
+﻿appId: app.dynorex.staging
+name: Paddock - host check-in code, RSVP updates capacity
+---
+- launchApp:
+    clearState: true
+- tapOn: "Paddock"
+- tapOn:
+    text: "Weekend Warrior meetup.*"
+- assertVisible: "You're hosting"
+- assertVisible: ".*Check-in code.*"
+- back
+- tapOn:
+    text: "Cars and Coffee.*"
+- tapOn: "Going"
+- assertVisible: "Going ✓"
+- assertVisible: ".*57 of 60 spots left.*"

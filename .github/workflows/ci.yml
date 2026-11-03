@@ -1,0 +1,96 @@
+# NOT YET RUN: written in Phase 1 on a machine without git or Docker. The first push will be its first run.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, types, unit + RLS tests, bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run format:check
+      # Unit tests + migrations/RLS tests on PGlite (real Postgres in WASM with a Supabase auth shim)
+      - run: npm test
+      - name: Web bundle builds (catches Metro/import errors)
+        run: npx expo export --platform web --output-dir dist
+        env: { APP_ENV: staging }
+      - name: No server-only secrets in the app bundle
+        run: |
+          if grep -rEl "service_role|SUPABASE_SERVICE_ROLE_KEY|sk_live_|sk_test_|whsec_|sk\.eyJ" dist; then
+            echo "::error::Server-only secret material found in the client bundle"; exit 1
+          fi
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+
+  supabase-db:
+    name: Migrations on real local Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Create config.toml if not committed yet
+        run: test -f supabase/config.toml || supabase init --force
+      - run: supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector
+      # applies every migration from a clean database, then seed.sql
+      - run: supabase db reset
+      - run: supabase db lint --level warning --fail-on error
+      - name: Generated types (artifact for comparing with the hand-written file)
+        run: supabase gen types typescript --local > generated.database.types.ts
+      - uses: actions/upload-artifact@v4
+        with: { name: generated-database-types, path: generated.database.types.ts }
+
+  edge-functions:
+    name: Edge Functions type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - run: deno check supabase/functions/**/*.ts
+
+  preview-build:
+    name: EAS preview build (PRs)
+    if: github.event_name == 'pull_request'
+    needs: [checks, supabase-db]
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip when EAS is not configured
+        id: gate
+        run: echo "enabled=$([ -n "$EXPO_TOKEN" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - if: steps.gate.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - if: steps.gate.outputs.enabled == 'true'
+        run: npm ci
+      - if: steps.gate.outputs.enabled == 'true'
+        uses: expo/expo-github-action@v8
+        with: { eas-version: latest, token: "${{ secrets.EXPO_TOKEN }}" }
+      - if: steps.gate.outputs.enabled == 'true'
+        run: eas build --profile preview --platform all --non-interactive --no-wait

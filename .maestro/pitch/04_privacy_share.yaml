@@ -1,0 +1,14 @@
+appId: app.dynorex.staging
+name: Making a build private makes its public link say Build not found
+---
+- launchApp:
+    clearState: true
+- tapOn: "Build, your garage"
+- tapOn:
+    text: ".*Weekend Warrior.*"
+- scrollUntilVisible:
+    element: "Make private"
+- tapOn: "Make private"
+- assertVisible: ".*Private: only you can see it.*"
+- openLink: "dynorex://build/d0000000-0000-4000-8000-000000000101"
+- assertVisible: "Build not found"

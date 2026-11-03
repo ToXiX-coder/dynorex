@@ -1,0 +1,15 @@
+# Terms of service — outline for counsel (not terms)
+
+| Topic                     | App behaviour it must match                                                                                                                                                                           |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eligibility and accounts  | Email or Apple/Google sign-in; verified email needed to publish, follow or report                                                                                                                     |
+| User content licence      | Owners keep their content; Dynorex needs a licence to host and show public builds                                                                                                                     |
+| Spec estimates disclaimer | Exact in-app text: "Estimates based on user-reported data. Dynorex is not responsible for accuracy."                                                                                                  |
+| No verification           | Dynorex doesn't verify vehicles, parts, work, numbers or business accounts beyond admin-granted badges                                                                                                |
+| Dynorex+                  | $7.99/month or $59.99/year via App Store / Google Play; auto-renews; cancel in store settings ≥ 24 h before renewal; refunds handled by the store; access lasts to period end; data kept on downgrade |
+| Acceptable use            | Community guidelines; rate limits; moderation can hide content/accounts                                                                                                                               |
+| Affiliate links           | None today; must be disclosed and labeled if ever added                                                                                                                                               |
+| Termination and deletion  | User can delete any time; what's kept (anonymous reports, audit, backups) per privacy facts                                                                                                           |
+| v2 features               | Routes / events / marketplace (5 % fee) need their own terms before launch                                                                                                                            |
+| Liability, safety         | Not for use while driving; no encouragement of unlawful driving                                                                                                                                       |
+| Governing law, contact    | Owner / counsel                                                                                                                                                                                       |

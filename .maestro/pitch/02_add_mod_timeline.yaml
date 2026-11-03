@@ -1,0 +1,18 @@
+appId: app.dynorex.staging
+name: Add a mod and see it at the top of the timeline (spec order, specs disclaimer)
+---
+- launchApp:
+    clearState: true
+- tapOn: "Build, your garage"
+- tapOn:
+    text: ".*Weekend Warrior.*"
+- assertVisible: "Estimates based on user-reported data. Dynorex is not responsible for accuracy."
+- tapOn: "Add mod"
+- tapOn: "Name, required"
+- inputText: "Short shifter"
+- tapOn: "Interior"
+- tapOn: "Complete"
+- scrollUntilVisible:
+    element: "Save mod"
+- tapOn: "Save mod"
+- assertVisible: "Short shifter"

@@ -1,0 +1,120 @@
+{
+  "measured_at": "2026-10-06T14:09:15.520Z",
+  "engine": "PGlite (Postgres 17 in WASM, single thread)",
+  "volume": {
+    "users": 3000,
+    "publicBuilds": 3000,
+    "privateVehicles": 1000,
+    "modsPerBuild": 10,
+    "buildFollows": 15000,
+    "follows": 10000,
+    "publicRoutes": 2000,
+    "routeRatings": 6000,
+    "upcomingEvents": 1500,
+    "rsvps": 10000,
+    "clubs": 300,
+    "clubMembers": 6000,
+    "posts": 20000,
+    "comments": 40000,
+    "likes": 60000
+  },
+  "runs_per_query": 30,
+  "unit": "ms",
+  "results": {
+    "garage list (own vehicles, page 1)": {
+      "p50": 0.8,
+      "p95": 1.3,
+      "max": 1.7
+    },
+    "vehicle timeline (page 1)": {
+      "p50": 0.9,
+      "p95": 1.3,
+      "max": 1.7
+    },
+    "spec estimate": {
+      "p50": 0.8,
+      "p95": 1.7,
+      "max": 3.1
+    },
+    "cost summary": {
+      "p50": 0.7,
+      "p95": 0.9,
+      "max": 1.4
+    },
+    "public build page": {
+      "p50": 1.1,
+      "p95": 1.5,
+      "max": 2.6
+    },
+    "public build specs": {
+      "p50": 0.8,
+      "p95": 2,
+      "max": 2.6
+    },
+    "discover trending": {
+      "p50": 86.2,
+      "p95": 116.3,
+      "max": 119.7
+    },
+    "discover new": {
+      "p50": 45.5,
+      "p95": 71.3,
+      "max": 75.5
+    },
+    "home feed": {
+      "p50": 52.3,
+      "p95": 78.2,
+      "max": 273.8
+    },
+    "search": {
+      "p50": 308.9,
+      "p95": 328.5,
+      "max": 328.8
+    },
+    "discover routes (top)": {
+      "p50": 19.1,
+      "p95": 21.5,
+      "max": 40.2
+    },
+    "discover routes (new)": {
+      "p50": 17.8,
+      "p95": 20.4,
+      "max": 347.5
+    },
+    "upcoming events": {
+      "p50": 27,
+      "p95": 30.5,
+      "max": 42.4
+    },
+    "paddock feed (following)": {
+      "p50": 10.5,
+      "p95": 11.2,
+      "max": 38.8
+    },
+    "paddock feed (everyone)": {
+      "p50": 1.7,
+      "p95": 2.9,
+      "max": 3.5
+    },
+    "clubs list": {
+      "p50": 4.4,
+      "p95": 5.9,
+      "max": 6
+    },
+    "post comments": {
+      "p50": 1.2,
+      "p95": 1.3,
+      "max": 1.4
+    },
+    "search (routes, events, clubs)": {
+      "p50": 107.3,
+      "p95": 132.1,
+      "max": 132.6
+    },
+    "notifications inbox": {
+      "p50": 0.6,
+      "p95": 0.9,
+      "max": 1
+    }
+  }
+}

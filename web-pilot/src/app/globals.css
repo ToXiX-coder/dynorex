@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-asphalt: #111315;
+  --color-lime: #aaff00;
+  --color-alert: #e00000;
+  --color-bone: #f2efe8;
+  --color-silver: #a6a9ad;
+  /* neutral tints of Asphalt Black, for panels and borders only */
+  --color-panel: #1a1d20;
+  --color-line: #33383d;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display:
+    "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Impact, ui-sans-serif, sans-serif;
+}
+
+html {
+  background: var(--color-asphalt);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-asphalt);
+  color: var(--color-bone);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-lime);
+  outline-offset: 2px;
+}
+
+@layer base {
+  a {
+    color: var(--color-lime);
+    text-underline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

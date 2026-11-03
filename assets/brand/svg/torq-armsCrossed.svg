@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 240">
+<!-- tail: thick at the hip, tapering back and up for balance -->
+<polygon points="80,140 40,124 4,104 8,114 36,138 76,172" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="80,140 40,124 4,104 30,120 78,150" fill="#F2EFE8" opacity="0.12"/><polygon points="8,114 36,138 76,172 72,160 38,132" fill="#111315" opacity="0.4"/>
+<!-- far leg (in shadow) -->
+<polygon points="110,150 134,152 140,186 128,200 116,196" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="110,150 134,152 140,186 128,200 116,196" fill="#111315" opacity="0.45"/>
+<polygon points="124,196 136,190 138,222 126,224" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="124,196 136,190 138,222 126,224" fill="#111315" opacity="0.45"/>
+<polygon points="118,222 146,222 154,232 112,234" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="118,222 146,222 154,232 112,234" fill="#111315" opacity="0.45"/>
+<!-- near leg: heavy haunch, shin, three clawed toes -->
+<polygon points="70,146 108,144 118,180 100,202 72,190" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="70,146 108,144 96,160 74,166" fill="#F2EFE8" opacity="0.12"/><polygon points="100,202 72,190 86,184 108,184" fill="#111315" opacity="0.35"/>
+<polygon points="92,196 110,186 114,222 100,224" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="104,192 110,186 114,222 108,222" fill="#111315" opacity="0.3"/>
+<polygon points="88,222 120,222 128,232 82,234" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="126,229 136,233 126,235" fill="#F2EFE8"/><polygon points="112,231 122,235 112,236" fill="#F2EFE8"/><polygon points="96,231 106,235 96,236" fill="#F2EFE8"/>
+<!-- torso in the mechanic jacket, leaning forward -->
+<polygon points="72,112 134,104 150,128 144,170 108,182 74,170 64,142" fill="#1A1D1F" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="72,112 134,104 128,118 80,124" fill="#F2EFE8" opacity="0.06"/><polygon points="144,170 108,182 74,170 100,166 140,154" fill="#111315" opacity="0.35"/>
+<line x1="114" y1="108" x2="110" y2="178" stroke="#AAFF00" stroke-width="3"/>
+<polygon points="98,108 114,124 108,106" fill="#AAFF00"/><polygon points="130,104 114,124 120,104" fill="#AAFF00"/>
+<rect x="122" y="136" width="20" height="9" fill="#E00000" transform="rotate(-6 132 140)"/>
+<!-- neck -->
+<polygon points="108,96 138,88 148,108 120,116" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="120,116 148,108 140,100 122,106" fill="#111315" opacity="0.3"/>
+<!-- skull: angular T-Rex head, long snout, brow ridge, cheekbone, nostril -->
+<polygon points="106,84 150,80 184,74 180,86 150,95 118,98" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="118,98 150,95 180,86 170,86 148,90" fill="#111315" opacity="0.45"/>
+<polygon points="94,64 100,44 124,34 146,38 176,43 198,52 204,62 198,74 154,80 120,86 102,82" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="98,48 104,36 112,46" fill="#999999" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="100,44 124,34 146,38 136,48 108,50" fill="#F2EFE8" opacity="0.22"/>
+<polygon points="146,38 176,43 198,52 196,58 162,54 140,48" fill="#F2EFE8" opacity="0.16"/>
+<polygon points="170,58 198,60 196,66 172,64" fill="#111315" opacity="0.18"/>
+<polygon points="102,82 120,86 126,72 108,68" fill="#111315" opacity="0.35"/>
+<polygon points="154,80 198,74 194,68 156,72" fill="#111315" opacity="0.3"/>
+<polygon points="190,54 198,56 194,60" fill="#111315"/>
+<polygon points="150,64 172,60 168,68" fill="#111315" opacity="0.35"/>
+<polygon points="106,36 148,50 150,58 108,46" fill="#E00000" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="142,80 149,79 145,88" fill="#F2EFE8"/><polygon points="151,78.8 158,77.6 154,86.4" fill="#F2EFE8"/><polygon points="160,77.6 167,76.2 163,84.8" fill="#F2EFE8"/><polygon points="169,76.4 176,74.8 172,83.2" fill="#F2EFE8"/><polygon points="178,75.2 185,73.4 181,81.6" fill="#F2EFE8"/><polygon points="187,74 194,72 190,80" fill="#F2EFE8"/>
+<!-- tachometer eye -->
+<circle cx="128" cy="62" r="12" fill="#111315" stroke="#AAFF00" stroke-width="2.5"/>
+<line x1="120.6" y1="66.3" x2="118.5" y2="67.5" stroke="#AAAAAA" stroke-width="1.2"/><line x1="119.6" y1="60.5" x2="117.2" y2="60.1" stroke="#AAAAAA" stroke-width="1.2"/><line x1="122.5" y1="55.5" x2="120.9" y2="53.6" stroke="#AAAAAA" stroke-width="1.2"/><line x1="128.0" y1="53.5" x2="128.0" y2="51.0" stroke="#AAAAAA" stroke-width="1.2"/><line x1="133.5" y1="55.5" x2="135.1" y2="53.6" stroke="#AAAAAA" stroke-width="1.2"/><line x1="136.4" y1="60.5" x2="138.8" y2="60.1" stroke="#AAAAAA" stroke-width="1.2"/><path d="M138.4 56.0 A12 12 0 0 1 139.6 65.1" fill="none" stroke="#E00000" stroke-width="2.5"/>
+<line x1="128" y1="62" x2="120.2" y2="57.5" stroke="#AAFF00" stroke-width="3" stroke-linecap="round"/>
+<circle cx="128" cy="62" r="2.5" fill="#E00000"/>
+<polyline points="96,144 140,152" fill="none" stroke="#AAAAAA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><polyline points="96,144 140,152" fill="none" stroke="#1A1D1F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="96,154 140,144" fill="none" stroke="#AAAAAA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><polyline points="96,154 140,144" fill="none" stroke="#1A1D1F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><polygon points="137,148 146,146 149,154 139,158" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="146,146 154,147 148,151" fill="#F2EFE8"/><polygon points="148,153 155,155 147,157" fill="#F2EFE8"/><polygon points="89,150 98,148 101,156 91,160" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="98,148 106,149 100,153" fill="#F2EFE8"/><polygon points="100,155 107,157 99,159" fill="#F2EFE8"/>
+<path d="M115.4 59 A13 13 0 0 1 140.6 59 Z" fill="#888888" stroke="#AAAAAA" stroke-width="2.5" stroke-linejoin="round"/><polygon points="148,92 154,91 151,85" fill="#F2EFE8"/><polygon points="157,89.75 163,88.75 160,82.75" fill="#F2EFE8"/><polygon points="166,87.5 172,86.5 169,80.5" fill="#F2EFE8"/><polygon points="175,85.25 181,84.25 178,78.25" fill="#F2EFE8"/><circle cx="204" cy="44" r="5" fill="#999999" opacity="0.75"/><circle cx="211" cy="33" r="4" fill="#999999" opacity="0.6"/><circle cx="206" cy="23" r="3" fill="#999999" opacity="0.45"/><path d="M161 15 Q167 21 161 27 M177 15 Q171 21 177 27 M163 13 Q169 19 175 13 M163 29 Q169 23 175 29" fill="none" stroke="#E00000" stroke-width="3" stroke-linecap="round"/>
+</svg>

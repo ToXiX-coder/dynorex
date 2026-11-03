@@ -1,0 +1,11 @@
+appId: app.dynorex.staging
+name: Launch straight into the app with sample data
+---
+- launchApp:
+    clearState: true
+- assertVisible: "PITCH MODE · SAMPLE DATA"
+- assertVisible: "Your Garage"
+- assertVisible: "Weekend Warrior"
+- assertVisible: "Build Updates"
+- tapOn: "Build, your garage"
+- assertVisible: "Project Zoom"

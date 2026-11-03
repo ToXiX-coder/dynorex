@@ -1,0 +1,20 @@
+appId: app.dynorex.staging
+name: Follow a public build, report it, block the owner
+---
+- launchApp:
+    clearState: true
+- tapOn: "Discover Builds"
+- tapOn:
+    text: ".*Rally Red Evo.*"
+- tapOn: "Follow Rally Red Evo"
+- assertVisible: "Following Rally Red Evo. Tap to unfollow"
+- scrollUntilVisible:
+    element: "Report this build"
+- tapOn: "Report this build"
+- tapOn: "Spam"
+- tapOn: "Send report"
+- assertVisible: "Report sent"
+- tapOn: "OK"
+- tapOn: "Block @apex_hunter"
+- tapOn: "Block"
+- assertVisible: "Blocked"

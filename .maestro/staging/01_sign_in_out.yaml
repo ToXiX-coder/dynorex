@@ -1,0 +1,17 @@
+appId: app.dynorex.staging
+name: Sign in with a staging test account and sign out (needs TEST_EMAIL, TEST_PASSWORD)
+---
+- launchApp:
+    clearState: true
+- tapOn: "Sign in"
+- tapOn: "Email"
+- inputText: ${TEST_EMAIL}
+- tapOn: "Password"
+- inputText: ${TEST_PASSWORD}
+- tapOn: "Sign in"
+- assertVisible: "Your Garage"
+- tapOn: "Your profile"
+- tapOn: "Settings"
+- tapOn: "Account"
+- tapOn: "Sign out"
+- assertVisible: "Create account"

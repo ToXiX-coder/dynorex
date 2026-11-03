@@ -1,0 +1,16 @@
+appId: app.dynorex.staging
+name: Free limit leads to an honest paywall with price and renewal terms
+---
+- launchApp:
+    clearState: true
+- tapOn: "Build, your garage"
+- assertVisible: "Free plan limit"
+- tapOn: "See Dynorex+"
+- assertVisible: "That's a Dynorex+ thing"
+- assertVisible: "$59.99/year"
+- assertVisible: "$7.99/month"
+- scrollUntilVisible:
+    element: ".*Renews automatically until you cancel.*"
+- assertVisible: "No store is contacted and nothing is charged."
+- tapOn: "Not now"
+- assertVisible: "Free plan limit"

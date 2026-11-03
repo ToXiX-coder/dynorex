@@ -1,0 +1,16 @@
+﻿appId: app.dynorex.staging
+name: Line - simulate a drive, share it, see the trimmed public route
+---
+- launchApp:
+    clearState: true
+- tapOn: "Line"
+- tapOn: "Start"
+- assertVisible: ".*never runs in the background.*"
+- tapOn: "Simulate a drive (pitch mode)"
+- assertVisible: "Review your drive"
+- tapOn: "Name"
+- inputText: "Pitch loop"
+- tapOn: "Share this drive publicly"
+- assertVisible: ".*removes the first and last half kilometre.*"
+- tapOn: "Save drive"
+- assertVisible: "● Shared"

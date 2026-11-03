@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "buildmark-demo-web", "runtimeExecutable": "node", "runtimeArgs": ["scripts/demo-web.mjs", "--port", "8083"], "port": 8083 }
+  ]
+}

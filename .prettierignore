@@ -1,0 +1,8 @@
+﻿node_modules
+dist
+.expo
+web-pilot
+assets/brand
+package-lock.json
+.claude
+supabase/functions
