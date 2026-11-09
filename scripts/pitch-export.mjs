@@ -10,8 +10,18 @@ import path from "node:path";
 const arg = process.argv[2] ?? "dist/pitch";
 if (!/^[\w./\\:-]+$/.test(arg)) throw new Error("Use a plain folder path");
 const out = path.resolve(arg);
-const env = { ...process.env, EXPO_PUBLIC_DEMO_MODE: "true", APP_ENV: "development" };
-execSync(`npx expo export --platform web --output-dir "${out}"`, { stdio: "inherit", env });
+// The demo never talks to a real backend: skip .env files (a developer's .env.local points at the live project)
+// and blank the connection, so no project URL or key ends up in a bundle that anyone with the link can read.
+const env = {
+  ...process.env,
+  EXPO_NO_DOTENV: "1",
+  EXPO_PUBLIC_SUPABASE_URL: "",
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: "",
+  EXPO_PUBLIC_DEMO_MODE: "true",
+  APP_ENV: "development",
+};
+// --clear: Metro caches transformed files with their inlined env values, so a cached build could still carry them
+execSync(`npx expo export --platform web --clear --output-dir "${out}"`, { stdio: "inherit", env });
 
 const dir = path.join(out, "_expo/static/js/web");
 const entry = fs.readdirSync(dir).find((f) => f.startsWith("entry-"));

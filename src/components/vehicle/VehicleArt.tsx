@@ -155,32 +155,6 @@ function Wheel({ cx, cy, r, id }: { cx: number; cy: number; r: number; id: strin
 // D-71: where the two-wheelers stand (bottom of their tyres) in the same 400x200 box
 const BIKE_GROUND = { motorcycle: 184, ebike: 182 } as const;
 
-/** A thin bicycle wheel: tyre, rim and wire spokes. */
-function SpokedWheel({ cx, cy, r, id }: { cx: number; cy: number; r: number; id: string }) {
-  return (
-    <G>
-      <Circle cx={cx} cy={cy} r={r - 3} fill="none" stroke="#141518" strokeWidth={6} />
-      <Circle cx={cx} cy={cy} r={r - 7} fill="none" stroke={`url(#${id}-rim)`} strokeWidth={2} />
-      {Array.from({ length: 16 }, (_, i) => {
-        const a = (i * 22.5 * Math.PI) / 180;
-        return (
-          <Line
-            key={i}
-            x1={cx + Math.cos(a) * 4}
-            y1={cy + Math.sin(a) * 4}
-            x2={cx + Math.cos(a + 0.35) * (r - 8)}
-            y2={cy + Math.sin(a + 0.35) * (r - 8)}
-            stroke="#8d939b"
-            strokeWidth={0.8}
-            opacity={0.8}
-          />
-        );
-      })}
-      <Circle cx={cx} cy={cy} r={4} fill="#1d2024" stroke="#8d939b" strokeWidth={1} />
-    </G>
-  );
-}
-
 /**
  * Side profiles for motorcycles and e-bikes, front to the left like the cars: painted tank or frame, dark mechanicals,
  * a lit headlamp and the shared wheel styles. Same studio, same lighting, so a mixed garage reads as one set.
@@ -220,41 +194,71 @@ function BikeDrawing({ kind, paint, id, ground }: { kind: "motorcycle" | "ebike"
       </G>
     );
   }
-  // real proportions: the wheelbase is under twice a wheel's diameter
-  const r = 42;
+  // D-73: an e-moto, a light electric dirt bike: tall knobby wheels, a battery box where the engine would be,
+  // a long flat seat, high plastics and a front number plate with the lamp in it
+  const r = 40;
   const cy = ground - r;
-  const F = { x: 122, y: cy };
-  const BB = { x: 200, y: cy + 2 };
-  const R = { x: 282, y: cy };
-  const H = { x: 148, y: cy - 74 };
-  const S = { x: 188, y: cy - 78 };
-  const tube = { stroke: `url(#${id}-paint)`, strokeWidth: 7, strokeLinecap: "round" as const };
+  const F = { x: 116, y: cy };
+  const R = { x: 288, y: cy };
+  const H = { x: 154, y: cy - 82 };
+  const pivot = { x: 228, y: cy - 14 };
   return (
     <G>
       {shadow}
-      <SpokedWheel cx={F.x} cy={F.y} r={r} id={id} />
-      <SpokedWheel cx={R.x} cy={R.y} r={r} id={id} />
-      {/* fork, chain and the rear hub motor */}
-      <Line x1={F.x} y1={F.y} x2={H.x} y2={H.y} stroke="#9aa0a8" strokeWidth={4} strokeLinecap="round" />
-      <Line x1={BB.x} y1={BB.y + 8} x2={R.x} y2={R.y + 6} stroke="#3a3f47" strokeWidth={2} />
+      <DirtWheel cx={F.x} cy={F.y} r={r} id={id} />
+      <DirtWheel cx={R.x} cy={R.y} r={r} id={id} />
+      {/* swingarm, chain and the mid motor */}
+      <Line x1={pivot.x} y1={pivot.y} x2={R.x} y2={R.y} stroke="#2a2d33" strokeWidth={8} strokeLinecap="round" />
+      <Line x1={pivot.x - 4} y1={pivot.y + 6} x2={R.x} y2={R.y + 8} stroke="#3a3f47" strokeWidth={2} />
       <Circle cx={R.x} cy={R.y} r={11} fill="#24272c" stroke="#3a3f47" strokeWidth={1.5} />
-      {/* frame: down tube carries the battery */}
-      <Line x1={H.x - 2} y1={H.y + 12} x2={BB.x} y2={BB.y} {...tube} strokeWidth={9} />
-      <Line x1={H.x + 6} y1={H.y + 22} x2={BB.x - 8} y2={BB.y - 10} stroke="#1a1c20" strokeWidth={9} strokeLinecap="round" />
-      <Line x1={H.x + 8} y1={H.y + 22} x2={BB.x - 10} y2={BB.y - 12} stroke="#AAFF00" strokeWidth={1.2} opacity={0.7} />
-      <Line x1={H.x} y1={H.y + 6} x2={S.x} y2={S.y + 8} {...tube} />
-      <Line x1={BB.x} y1={BB.y} x2={S.x} y2={S.y} {...tube} />
-      <Line x1={BB.x} y1={BB.y} x2={R.x} y2={R.y} {...tube} strokeWidth={5} />
-      <Line x1={S.x} y1={S.y + 4} x2={R.x} y2={R.y} {...tube} strokeWidth={5} />
-      <Circle cx={BB.x} cy={BB.y} r={9} fill="#2a2d33" stroke="#8d939b" strokeWidth={1.5} />
-      {/* cockpit and saddle */}
-      <Path d={`M${H.x} ${H.y}L${H.x - 4} ${H.y - 14}L${H.x + 16} ${H.y - 18}`} stroke="#1a1c20" strokeWidth={4} strokeLinecap="round" fill="none" />
-      <Line x1={S.x} y1={S.y} x2={S.x - 3} y2={S.y - 10} stroke="#1a1c20" strokeWidth={4} />
-      <Path d={`M${S.x - 22} ${S.y - 12}C${S.x - 10} ${S.y - 17} ${S.x + 10} ${S.y - 16} ${S.x + 14} ${S.y - 11}L${S.x - 20} ${S.y - 8}Z`} fill="#16181b" />
-      {/* lamps */}
-      <Ellipse cx={H.x - 12} cy={H.y + 10} rx={18} ry={8} fill={`url(#${id}-head)`} opacity={0.6} />
-      <Circle cx={H.x - 6} cy={H.y + 10} r={3.5} fill="#F2EFE8" />
-      <Rect x={S.x + 22} y={S.y + 4} width={5} height={4} rx={1.5} fill="#ff2a2a" />
+      <Circle cx={pivot.x - 8} cy={pivot.y + 4} r={13} fill="#24272c" stroke="#8d939b" strokeWidth={1.5} />
+      {/* upside-down fork and the rear shock */}
+      <Line x1={F.x} y1={F.y} x2={H.x - 6} y2={H.y + 34} stroke="#9aa0a8" strokeWidth={6} strokeLinecap="round" />
+      <Line x1={H.x - 6} y1={H.y + 34} x2={H.x} y2={H.y + 6} stroke="#2a2d33" strokeWidth={8} strokeLinecap="round" />
+      <Line x1={pivot.x + 6} y1={pivot.y - 44} x2={pivot.x + 30} y2={pivot.y - 6} stroke="#d9b63c" strokeWidth={5} strokeDasharray="3 2" />
+      {/* spine frame, the battery box with its lime seam, and a painted side panel over it */}
+      <Path d={`M${H.x} ${H.y + 8}L${pivot.x + 10} ${pivot.y - 48}L${pivot.x + 4} ${pivot.y}`} stroke="#3a3f47" strokeWidth={7} fill="none" strokeLinejoin="round" />
+      <Rect x={H.x + 14} y={cy - 66} width={58} height={44} rx={6} fill="#24272c" />
+      <Line x1={H.x + 18} y1={cy - 44} x2={H.x + 68} y2={cy - 44} stroke="#AAFF00" strokeWidth={1.2} opacity={0.7} />
+      <Path d={`M${H.x + 10} ${cy - 72}L${H.x + 76} ${cy - 76}L${H.x + 70} ${cy - 50}L${H.x + 18} ${cy - 46}Z`} fill={`url(#${id}-paint)`} />
+      {/* long flat seat running back into the tail plastic and rear fender */}
+      <Path d={`M${H.x + 40} ${cy - 84}L${R.x + 6} ${cy - 92}L${R.x + 8} ${cy - 84}L${H.x + 44} ${cy - 76}Z`} fill="#16181b" />
+      <Path d={`M${R.x - 8} ${cy - 86}L${R.x + 46} ${cy - 104}L${R.x + 48} ${cy - 96}L${R.x + 4} ${cy - 74}Z`} fill={`url(#${id}-paint)`} />
+      {/* high front fender, number plate with the lamp, bars on risers */}
+      <Path d={`M${H.x - 4} ${H.y + 30}L${F.x - 18} ${H.y + 38}L${F.x - 22} ${H.y + 44}L${H.x - 6} ${H.y + 40}Z`} fill={`url(#${id}-paint)`} />
+      <Path d={`M${H.x - 4} ${H.y - 2}L${H.x - 16} ${H.y + 4}L${H.x - 18} ${H.y + 30}L${H.x - 2} ${H.y + 24}Z`} fill={`url(#${id}-paint)`} />
+      <Ellipse cx={H.x - 24} cy={H.y + 16} rx={20} ry={9} fill={`url(#${id}-head)`} opacity={0.6} />
+      <Circle cx={H.x - 12} cy={H.y + 16} r={4} fill="#F2EFE8" />
+      <Path d={`M${H.x} ${H.y}L${H.x + 4} ${H.y - 10}L${H.x + 22} ${H.y - 14}`} stroke="#1a1c20" strokeWidth={4} strokeLinecap="round" fill="none" />
+      <Line x1={pivot.x - 18} y1={pivot.y + 4} x2={pivot.x - 2} y2={pivot.y + 4} stroke="#8d939b" strokeWidth={3} strokeLinecap="round" />
+      <Rect x={R.x + 42} y={cy - 104} width={6} height={4} rx={1.5} fill="#ff2a2a" />
+    </G>
+  );
+}
+
+/** A dirt-bike wheel: a tall tyre with knobs round the edge, a thin rim and wire spokes. */
+function DirtWheel({ cx, cy, r, id }: { cx: number; cy: number; r: number; id: string }) {
+  return (
+    <G>
+      <Circle cx={cx} cy={cy} r={r - 5} fill="none" stroke="#141518" strokeWidth={10} />
+      <Circle cx={cx} cy={cy} r={r - 0.5} fill="none" stroke="#1d2024" strokeWidth={3} strokeDasharray="4 3" />
+      <Circle cx={cx} cy={cy} r={r - 11} fill="none" stroke={`url(#${id}-rim)`} strokeWidth={2} />
+      {Array.from({ length: 18 }, (_, i) => {
+        const a = (i * 20 * Math.PI) / 180;
+        return (
+          <Line
+            key={i}
+            x1={cx + Math.cos(a) * 5}
+            y1={cy + Math.sin(a) * 5}
+            x2={cx + Math.cos(a + 0.3) * (r - 12)}
+            y2={cy + Math.sin(a + 0.3) * (r - 12)}
+            stroke="#8d939b"
+            strokeWidth={0.8}
+            opacity={0.8}
+          />
+        );
+      })}
+      <Circle cx={cx} cy={cy} r={6} fill="#1d2024" stroke="#8d939b" strokeWidth={1.2} />
     </G>
   );
 }

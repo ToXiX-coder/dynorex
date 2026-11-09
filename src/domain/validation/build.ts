@@ -90,7 +90,10 @@ export const vehicleFormSchema = z.object({
   visibility: z.enum(["private", "public"]),
   // D-71: what it is (cars when left out, as every vehicle was before), plus the e-bike's own stock numbers
   kind: z.enum(["car", "motorcycle", "ebike"]).default("car"),
-  motor_w: optNumber("Motor power", 1, 20000, { int: true }).optional(),
+  motor_w: optNumber("Peak power", 1, 100000, { int: true }).optional(),
+  // D-73: e-moto pack voltage and road use
+  battery_v: optNumber("Battery voltage", 12, 800, { int: true }).optional(),
+  street_legal: z.boolean().nullable().optional(),
   battery_wh: optNumber("Battery", 1, 10000, { int: true }).optional(),
   range_mi: optNumber("Range", 0, 500, { exclusive: true }).optional(),
   top_speed_mph: optNumber("Top speed", 0, 300, { exclusive: true }).optional(),
@@ -126,7 +129,16 @@ export function vehicleForKind(f: VehicleForm): VehicleForm {
       baseline_torque_lbft: null,
       baseline_zero_to_sixty_s: null,
     };
-  const noEbike = { motor_w: null, battery_wh: null, range_mi: null, top_speed_mph: null, ebike_class: null, frame_serial: null };
+  const noEbike = {
+    motor_w: null,
+    battery_wh: null,
+    battery_v: null,
+    street_legal: null,
+    range_mi: null,
+    top_speed_mph: null,
+    ebike_class: null,
+    frame_serial: null,
+  };
   return { ...f, ...noEbike, engine_cc: f.kind === "motorcycle" ? (f.engine_cc ?? null) : null };
 }
 

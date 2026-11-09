@@ -1,4 +1,5 @@
 import { StyleSheet, View } from "react-native";
+import { roadUseText } from "@/domain/vehicleKind";
 import { formatRange, isStock, sayRange, specRange, type SpecField } from "@/domain/specRange";
 import { formatSpec, SPEC_DISCLAIMER, type SpecStatus } from "@/domain/specs";
 import type { PublicSpecRow, SpecEstimateRow } from "@/services/supabase/database.types";
@@ -179,13 +180,9 @@ export type EbikeNumbers = {
   battery_wh?: number | string | null;
   range_mi?: number | string | null;
   top_speed_mph?: number | string | null;
-  ebike_class?: number | null;
-};
-
-const CLASS_WORDS: Record<number, string> = {
-  1: "Class 1: pedal assist only, up to 20 mph.",
-  2: "Class 2: throttle allowed, up to 20 mph.",
-  3: "Class 3: pedal assist up to 28 mph.",
+  /** D-73 */
+  battery_v?: number | null;
+  street_legal?: boolean | null;
 };
 
 /** An e-bike stock number: the owner's figure, exact, in the same tile as the car specs. */
@@ -244,15 +241,24 @@ export function EbikeSpecCard({
   const n = (v: number | string | null | undefined) => (v === null || v === undefined ? null : Number(v));
   const e = estimate;
   const wh = n(bike.battery_wh);
+  const kw = n(bike.motor_w) === null ? null : n(bike.motor_w)! / 1000;
   const range = n(bike.range_mi);
   return (
     <View style={{ gap: space.sm }}>
-      {bike.ebike_class && CLASS_WORDS[bike.ebike_class] ? (
-        <Text variant="bodyStrong">{CLASS_WORDS[bike.ebike_class]}</Text>
+      {roadUseText(bike.street_legal) ? (
+        <Text variant="bodyStrong">
+          {bike.street_legal ? "Street legal: plated for the road." : "Off-road only: trails and private land."}
+        </Text>
       ) : null}
       <View style={styles.grid}>
-        <StockTile label="Motor" value={n(bike.motor_w)} unit="W" />
-        <StockTile label="Battery" value={wh} unit="Wh" />
+        {/* e-moto makers quote peak power in kW */}
+        <StockTile label="Peak power" value={kw} unit="kW" decimals={1} />
+        <StockTile
+          label="Battery"
+          value={wh}
+          unit="Wh"
+          note={bike.battery_v ? `${bike.battery_v}V pack` : "Stock"}
+        />
         <StockTile label="Range" value={range} unit="mi" />
         <StockTile label="Top speed" value={n(bike.top_speed_mph)} unit="mph" />
         <SpecTile
@@ -272,8 +278,8 @@ export function EbikeSpecCard({
         />
       </View>
       <Text variant="caption" muted>
-        Stock numbers, as the owner entered them or from the maker. Real range depends on assist level, rider, hills
-        and weather.
+        Stock numbers, as the owner entered them or from the maker. Real range depends on the power mode, rider,
+        terrain and weather.
       </Text>
     </View>
   );

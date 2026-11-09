@@ -51,6 +51,20 @@ describe("vehicle kinds", () => {
     expect(est!.weight_status).toBe("estimate");
   });
 
+  it("an owner can save an e-moto with peak power past 20 kW, its pack voltage and road use (D-73)", async () => {
+    const [v] = await q<{ id: string }>(
+      `insert into public.vehicles (kind, year, make, model, motor_w, battery_wh, battery_v, street_legal, top_speed_mph,
+         baseline_weight_lb, visibility)
+       values ('ebike', 2026, 'Stark Future', 'Varg MX 1.2', 60000, 7200, 420, false, 60, 260, 'public') returning id`,
+    );
+    await q("select public.publish_build($1, true)", [v!.id]);
+    const [pub] = await q<Record<string, unknown>>("select * from public.public_builds where vehicle_id = $1", [v!.id], null);
+    expect(pub).toMatchObject({ motor_w: 60000, battery_v: 420, street_legal: false });
+    expect(
+      await fails("insert into public.vehicles (year, make, model, street_legal) values (2020, 'Subaru', 'WRX', true)"),
+    ).toMatch(/vehicles_ebike_fields/);
+  });
+
   it("keeps each kind's fields to that kind", async () => {
     expect(await fails("insert into public.vehicles (year, make, model, motor_w) values (2020, 'Subaru', 'WRX', 500)")).toMatch(
       /vehicles_ebike_fields/,

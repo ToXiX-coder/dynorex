@@ -12,8 +12,8 @@ import { makeOptions } from "@/domain/catalog";
 import { catalogModels } from "@/domain/modelCatalog";
 import { config } from "@/services/config";
 import {
-  EBIKE_CLASSES,
   EBIKE_MAKES,
+  ROAD_USE,
   MOTORCYCLE_MAKES,
   starterLabel,
   starterModels,
@@ -65,8 +65,9 @@ type Fields = Record<
   | "range_mi"
   | "top_speed_mph"
   | "engine_cc"
-  | "ebike_class"
-  | "frame_serial",
+  | "frame_serial"
+  | "motor_kw"
+  | "battery_v",
   string
 >;
 
@@ -116,10 +117,15 @@ export function VehicleFormView({
     range_mi: str(initial?.range_mi),
     top_speed_mph: str(initial?.top_speed_mph),
     engine_cc: str(initial?.engine_cc),
-    ebike_class: str(initial?.ebike_class),
     frame_serial: str(initial?.frame_serial),
+    // D-73: e-moto peak power is entered in kW (stored in watts), plus the pack voltage
+    motor_kw: initial?.motor_w ? String(Number(initial.motor_w) / 1000) : "",
+    battery_v: str(initial?.battery_v),
   }));
   const [kind, setKind] = useState<VehicleKind>(() => kindOf(initial));
+  const [road, setRoad] = useState<"street" | "offroad" | null>(() =>
+    initial?.street_legal === true ? "street" : initial?.street_legal === false ? "offroad" : null,
+  );
   const [unit, setUnit] = useState<"mi" | "km">(initial?.odometer_unit ?? "mi");
   const [visibility, setVisibility] = useState<"private" | "public">(
     initial?.visibility === "public" ? "public" : "private",
@@ -262,8 +268,22 @@ export function VehicleFormView({
   const modelList = useMemo(() => modelNames.map((n) => ({ value: n, label: n })), [modelNames]);
 
   const submit = () => {
-    const parsed = vehicleFormSchema.safeParse({ ...f, odometer_unit: unit, visibility, kind });
-    if (!parsed.success) return setErrors(fieldErrors(parsed.error));
+    // kW in the form, watts in the data (a typo that isn't a number stays text, so it's flagged, not dropped)
+    const kw = f.motor_kw.trim().replace(",", ".");
+    const motorW = kw === "" ? "" : Number.isFinite(Number(kw)) ? String(Math.round(Number(kw) * 1000)) : kw;
+    const parsed = vehicleFormSchema.safeParse({
+      ...f,
+      motor_w: motorW,
+      street_legal: road === null ? null : road === "street",
+      odometer_unit: unit,
+      visibility,
+      kind,
+    });
+    if (!parsed.success) {
+      const errs = fieldErrors(parsed.error);
+      if (errs.motor_w) errs.motor_kw = "Peak power: a number of kW, up to 100";
+      return setErrors(errs);
+    }
     setErrors({});
     const data = vehicleForKind(parsed.data);
     // blanks take the starter list's stock numbers, as a car's take the factory table's
@@ -276,8 +296,9 @@ export function VehicleFormView({
       data.baseline_zero_to_sixty_s = fill(data.baseline_zero_to_sixty_s, moto.zero_to_sixty_s);
     }
     if (ebike) {
-      data.ebike_class = fill(data.ebike_class, ebike.ebike_class);
       data.motor_w = fill(data.motor_w, ebike.motor_w);
+      data.battery_v = fill(data.battery_v, ebike.battery_v);
+      data.street_legal = data.street_legal ?? ebike.street_legal.v;
       data.battery_wh = fill(data.battery_wh, ebike.battery_wh);
       data.range_mi = fill(data.range_mi, ebike.range_mi);
       data.top_speed_mph = fill(data.top_speed_mph, ebike.top_speed_mph);
@@ -297,9 +318,11 @@ export function VehicleFormView({
   const detail = kindDetail({
     kind,
     engine_cc: Number(f.engine_cc) || (moto?.engine_cc.v ?? null),
-    ebike_class: Number(f.ebike_class) || (ebike?.ebike_class.v ?? null),
+    motor_w: Number(f.motor_kw) ? Number(f.motor_kw) * 1000 : (ebike?.motor_w.v ?? null),
+    battery_v: Number(f.battery_v) || (ebike?.battery_v.v ?? null),
   });
   const caption = [named ? kindLabel(kind) : null, detail].filter(Boolean).join(" · ");
+  const roadShown = road ?? (ebike ? (ebike.street_legal.v ? "street" : "offroad") : null);
   return (
     <View style={styles.form}>
       {/* the build's own drawing, redrawn as it's described: the type, the model's shape, a colour named in the
@@ -445,19 +468,16 @@ export function VehicleFormView({
       ) : null}
       {kind === "ebike" ? (
         <View style={{ gap: space.xs }}>
-          <Text variant="label">Class</Text>
-          <Segmented
-            label="E-bike class"
-            options={EBIKE_CLASSES}
-            value={Number(f.ebike_class) || (ebike?.ebike_class.v ?? null)}
-            onChange={(c) => set("ebike_class")(String(c))}
-          />
+          <Text variant="label">Road use</Text>
+          <Segmented label="Road use" options={ROAD_USE} value={roadShown} onChange={setRoad} />
           <Text variant="caption" muted>
-            {EBIKE_CLASSES.find((c) => c.id === (Number(f.ebike_class) || ebike?.ebike_class.v))?.detail ??
-              "The US class on the frame sticker. It decides where you can ride."}
-            {!f.ebike_class && ebike ? (ebike.ebike_class.est ? " (our estimate for this model)" : " (as sold)") : ""}
+            {roadShown === "street"
+              ? "Plated and insured for the road, with lights, mirrors and a horn."
+              : roadShown === "offroad"
+                ? "Trails and private land only. Most e-motos ship this way."
+                : "Most e-motos are sold off-road only; some come plated, and some owners plate theirs."}
+            {!road && ebike ? (ebike.street_legal.est ? " (our estimate for this model)" : " (as sold)") : ""}
           </Text>
-          {errors.ebike_class ? <FieldError message={errors.ebike_class} /> : null}
         </View>
       ) : null}
       </View>
@@ -487,14 +507,27 @@ export function VehicleFormView({
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
                 <TextField
-                  label="Motor (W)"
-                  value={f.motor_w}
-                  onChangeText={set("motor_w")}
-                  placeholder={phFig(ebike?.motor_w)}
-                  keyboardType="number-pad"
-                  error={errors.motor_w}
+                  label="Peak power (kW)"
+                  value={f.motor_kw}
+                  onChangeText={set("motor_kw")}
+                  placeholder={phFig(ebike ? { ...ebike.motor_w, v: ebike.motor_w.v / 1000 } : null, 1)}
+                  keyboardType="decimal-pad"
+                  error={errors.motor_kw}
                 />
               </View>
+              <View style={{ flex: 1 }}>
+                <TextField
+                  label="Battery (V)"
+                  value={f.battery_v}
+                  onChangeText={set("battery_v")}
+                  placeholder={phFig(ebike?.battery_v)}
+                  keyboardType="number-pad"
+                  maxLength={3}
+                  error={errors.battery_v}
+                />
+              </View>
+            </View>
+            <View style={styles.row}>
               <View style={{ flex: 1 }}>
                 <TextField
                   label="Battery (Wh)"
@@ -503,6 +536,16 @@ export function VehicleFormView({
                   placeholder={phFig(ebike?.battery_wh)}
                   keyboardType="number-pad"
                   error={errors.battery_wh}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextField
+                  label="Weight (lb)"
+                  value={f.baseline_weight_lb}
+                  onChangeText={set("baseline_weight_lb")}
+                  placeholder={phFig(ebike?.weight_lb)}
+                  keyboardType="decimal-pad"
+                  error={errors.baseline_weight_lb}
                 />
               </View>
             </View>
@@ -527,19 +570,6 @@ export function VehicleFormView({
                   error={errors.top_speed_mph}
                 />
               </View>
-            </View>
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <TextField
-                  label="Weight (lb)"
-                  value={f.baseline_weight_lb}
-                  onChangeText={set("baseline_weight_lb")}
-                  placeholder={phFig(ebike?.weight_lb)}
-                  keyboardType="decimal-pad"
-                  error={errors.baseline_weight_lb}
-                />
-              </View>
-              <View style={{ flex: 1 }} />
             </View>
           </>
         ) : (
@@ -624,15 +654,15 @@ export function VehicleFormView({
             error={errors.vin}
           />
         ) : (
-          // an e-bike's VIN: the serial stamped under the bottom bracket. Proves it's yours if it's ever stolen
+          // an e-moto's VIN or frame number, stamped by the steering head. Proves it's yours if it's ever stolen
           <TextField
-            label="Frame serial"
+            label="VIN or frame number"
             value={f.frame_serial}
             onChangeText={(t) => set("frame_serial")(t.toUpperCase())}
             autoCapitalize="characters"
             autoCorrect={false}
             maxLength={40}
-            hint="Private. Stamped under the frame by the pedals. Handy for police reports and insurance if it's stolen."
+            hint="Private. Stamped on the frame by the steering head. E-motos get stolen a lot: police and insurers ask for this."
             error={errors.frame_serial}
           />
         )}
@@ -667,7 +697,7 @@ export function VehicleFormView({
         <Segmented label="Who can see it" options={VISIBILITY} value={visibility} onChange={setVisibility} />
         <Text variant="caption" muted>
           {visibility === "public"
-            ? `Anyone can see this ${noun} and its build (never the ${hasVin(kind) ? "VIN" : "frame serial"}). Needs a verified email.`
+            ? `Anyone can see this ${noun} and its build (never the ${hasVin(kind) ? "VIN" : "frame number"}). Needs a verified email.`
             : "Only you can see it."}
         </Text>
       </View>

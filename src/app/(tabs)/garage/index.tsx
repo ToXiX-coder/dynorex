@@ -11,7 +11,7 @@ import { ListGroup, ListRow } from "@/components/lists/ListGroup";
 import { Appear } from "@/components/motion/Motion";
 import { Text } from "@/components/Text";
 import { VehicleArt } from "@/components/vehicle/VehicleArt";
-import { kindLabel, kindOf } from "@/domain/vehicleKind";
+import { kindLabel, kindOf, kwText } from "@/domain/vehicleKind";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { SignInPrompt } from "@/features/auth/SignInPrompt";
 import { buildService, type VehicleCard } from "@/features/garage/buildService";
@@ -158,7 +158,7 @@ function VehicleCardView({ v }: { v: VehicleCard }) {
             {`${kindOf(v) === "car" ? "" : `${kindLabel(kindOf(v))} · `}${v.sold_at ? "Sold · read-only" : v.visibility === "public" ? "Public" : "Private"}${
               kindOf(v) === "ebike"
                 ? v.motor_w
-                  ? ` · ${Number(v.motor_w).toLocaleString()} W motor`
+                  ? ` · ${kwText(v.motor_w)} peak`
                   : ""
                 : v.baseline_hp
                   ? ` · stock ${Math.round(Number(v.baseline_hp))} hp (${v.baseline_looked_up?.includes("baseline_hp") ? "factory" : "your number"})`

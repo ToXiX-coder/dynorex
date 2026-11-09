@@ -38,11 +38,14 @@ describe("vehicle kinds (D-71)", () => {
     expect(categoryForModName("Brake pads", "motorcycle")).toBe("brakes");
     expect(categoryForModName("Akrapovic slip-on", "motorcycle")).toBe("exhaust");
     expect(categoryForModName("Rizoma clip ons", "motorcycle")).toBe("controls");
-    expect(categoryForModName("Bafang motor swap", "ebike")).toBe("motor");
-    expect(categoryForModName("Second battery", "ebike")).toBe("battery");
-    expect(categoryForModName("Gates belt", "ebike")).toBe("drivetrain");
-    expect(categoryForModName("Dropper seatpost", "ebike")).toBe("cockpit");
-    // a car category the e-bike doesn't have moves to the closest one it does
+    // D-73: e-moto mods
+    expect(categoryForModName("EBMX X-9000 controller", "ebike")).toBe("motor");
+    expect(categoryForModName("72V 50Ah pack", "ebike")).toBe("battery");
+    expect(categoryForModName("Warp 9 rear sprocket 58T", "ebike")).toBe("drivetrain");
+    expect(categoryForModName("Fastace fork", "ebike")).toBe("suspension");
+    expect(categoryForModName("Ko Moto plastics kit", "ebike")).toBe("exterior");
+    expect(categoryForModName("ProTaper bars", "ebike")).toBe("controls");
+    // a car category the e-moto doesn't have moves to the closest one it does
     expect(categoryForKind("engine", "ebike")).toBe("motor");
     expect(categoryForKind("aero", "motorcycle")).toBe("exterior");
   });
@@ -111,6 +114,16 @@ describe("two-wheel details (D-72)", () => {
     expect(car.engine_cc).toBeNull();
   });
 
+  it("takes an e-moto's peak power up to 100 kW, its pack voltage and road use (D-73)", () => {
+    const varg = vehicleForKind(
+      vehicleFormSchema.parse({ ...base, kind: "ebike", motor_w: "60000", battery_v: "420", street_legal: false }),
+    );
+    expect(varg).toMatchObject({ motor_w: 60000, battery_v: 420, street_legal: false });
+    expect(vehicleFormSchema.safeParse({ ...base, kind: "ebike", motor_w: "150000" }).success).toBe(false);
+    const car = vehicleForKind(vehicleFormSchema.parse({ ...base, battery_v: "72", street_legal: true }));
+    expect(car).toMatchObject({ battery_v: null, street_legal: null });
+  });
+
   it("refuses an impossible class or serial", () => {
     expect(vehicleFormSchema.safeParse({ ...base, kind: "ebike", ebike_class: "4" }).success).toBe(false);
     expect(vehicleFormSchema.safeParse({ ...base, kind: "ebike", frame_serial: "no spaces allowed" }).success).toBe(false);
@@ -118,7 +131,8 @@ describe("two-wheel details (D-72)", () => {
 
   it("names the detail after the model", () => {
     expect(kindDetail({ kind: "motorcycle", engine_cc: 1252 })).toBe("1,252cc");
-    expect(kindDetail({ kind: "ebike", ebike_class: 2 })).toBe("Class 2");
+    expect(kindDetail({ kind: "ebike", motor_w: 12500, battery_v: 74 })).toBe("12.5 kW · 74V");
+    expect(kindDetail({ kind: "ebike", motor_w: 8000 })).toBe("8 kW");
     expect(kindDetail({ kind: "car", engine_cc: 2000 })).toBeNull();
   });
 
@@ -127,13 +141,14 @@ describe("two-wheel details (D-72)", () => {
     expect(yamaha[0]).toBe("MT-07");
     expect(yamaha).toContain("YZF-R7");
     expect(new Set(yamaha).size).toBe(yamaha.length);
-    expect(starterModels("ebike", "Tern")).toContain("GSD");
+    expect(starterModels("ebike", "talaria")[0]).toBe("Sting R MX4");
+    expect(starterModels("ebike", "Talaria")).toContain("XXX");
   });
 
   it("gives each kind its own maintenance jobs, cars unchanged", () => {
     expect(presetsFor("car")).toBe(MAINTENANCE_PRESETS);
     expect(presetsFor("motorcycle").map((p) => p.title)).toContain("Chain clean and lube");
-    expect(presetsFor("ebike").map((p) => p.title)).toContain("Battery health check");
+    expect(presetsFor("ebike").map((p) => p.title)).toContain("Swingarm and linkage bearings");
     // a motorcycle oil change suggests its own interval
     expect(suggestNextDue("Oil change", "2026-01-15", 10000, "motorcycle").next_due_odometer).toBe(14000);
     expect(suggestNextDue("Oil change", "2026-01-15", 10000).next_due_odometer).toBe(15000);
@@ -149,13 +164,14 @@ describe("two-wheel starter list", () => {
 
   it("finds models by make, any case", () => {
     expect(starterModels("motorcycle", "yamaha")[0]).toBe("MT-07");
-    const xp = starterSpec("ebike", "LECTRIC", "xp 3.0");
-    expect(xp?.kind === "ebike" && xp.motor_w.v).toBe(500);
+    const lbx = starterSpec("ebike", "SUR-RON", "light bee x");
+    expect(lbx?.kind === "ebike" && lbx.motor_w.v).toBe(8000);
     expect(starterSpec("car", "Yamaha", "MT-07")).toBeNull();
   });
 
   it("marks estimates in the summary", () => {
-    expect(starterSummary(starterSpec("ebike", "Aventon", "Level.2")!)).toMatch(/~ is an estimate/);
+    expect(starterSummary(starterSpec("ebike", "Segway", "X260")!)).toMatch(/~ is an estimate/);
+    expect(starterSummary(starterSpec("ebike", "Stark Future", "Varg MX 1.2")!)).toMatch(/^60 kW peak · 420 V/);
     expect(starterSummary(starterSpec("motorcycle", "Harley-Davidson", "Sportster S")!)).not.toMatch(/~/);
   });
 });

@@ -589,29 +589,32 @@ export function seedDemo(): DemoState {
     engine_cc: 689,
     odometer: 4200,
   });
-  const xp3 = vehicle(0x11d, civic.id, 2024, "Lectric", "XP 3.0", "Commuter Fold", true, [null, null, 62, null], {
+  // D-73: the sample e-moto (stored kind "ebike"), with the owner's 72V pack and controller already in
+  const xp3 = vehicle(0x11d, civic.id, 2025, "Sur-Ron", "Light Bee X", "Trail Bee", true, [null, null, 126, null], {
     kind: "ebike",
-    motor_w: 500,
-    battery_wh: 499,
-    range_mi: 24,
-    top_speed_mph: 28,
-    ebike_class: 3,
+    motor_w: 8000,
+    battery_v: 60,
+    battery_wh: 2400,
+    range_mi: 47,
+    top_speed_mph: 47,
+    street_legal: false,
     odometer: 1850,
   });
   const twoWheels = {
     vehicles: [mt07, xp3],
     builds: [
       build(0x21c, mt07, "Canyon Hooligan", "Middleweight naked, set up for back roads."),
-      build(0x21d, xp3, "Commuter Fold", "Folds into the office lift, does the 9-mile run every day."),
+      build(0x21d, xp3, "Trail Bee", "Stock frame, everything else is getting the treatment. Trails on weekends."),
     ],
     mods: [
       mod(0x381, mt07, "Slip-on exhaust", "exhaust", "complete", 69900, d({ hp: 2, weight: -6 }), 35, { brand: "SampleCan" }),
       mod(0x382, mt07, "Frame sliders", "safety", "complete", 14900, d({}), 30),
       mod(0x383, mt07, "Fork cartridges", "suspension", "in_progress", 89900, d({}), 6),
       mod(0x384, mt07, "Quickshifter", "controls", "planned", 39900, d({}), 2),
-      mod(0x385, xp3, "Puncture-resistant tires", "wheels", "complete", 9900, d({ weight: 1 }), 40),
-      mod(0x386, xp3, "Range extender battery", "battery", "planned", 49900, d({ weight: 7 }), 5),
-      mod(0x387, xp3, "Suspension seatpost", "cockpit", "complete", 6900, d({ weight: 1 }), 22),
+      mod(0x385, xp3, "Controller upgrade", "motor", "complete", 89900, d({}), 40, { brand: "SampleVolt" }),
+      mod(0x386, xp3, "72V battery", "battery", "planned", 189900, d({ weight: 6 }), 5),
+      mod(0x387, xp3, "Fork upgrade", "suspension", "complete", 99900, d({ weight: -2 }), 22),
+      mod(0x388, xp3, "Rear sprocket", "drivetrain", "complete", 7900, d({}), 30),
     ],
   };
 

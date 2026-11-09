@@ -58,19 +58,21 @@ export function heroStatsFrom(e: EstimateLike): HeroStat[] {
   return out;
 }
 
-/** D-71: an e-bike's headline numbers are its stock motor, range and top speed, exact (they're the owner's). */
+/** D-71: an e-moto's headline numbers are its peak power, range and top speed, exact (they're the owner's). */
 export function ebikeHeroStats(b: {
   motor_w?: number | string | null;
   range_mi?: number | string | null;
   top_speed_mph?: number | string | null;
 }): HeroStat[] {
   const out: HeroStat[] = [];
-  const add = (v: number | string | null | undefined, unit: string, label: string) => {
+  const add = (v: number | string | null | undefined, unit: string, label: string, decimals = 0) => {
     if (v === null || v === undefined || !Number(v)) return;
-    const x = Math.round(Number(v));
-    out.push({ low: x, high: x, decimals: 0, unit, label });
+    const x = Number(Number(v).toFixed(decimals));
+    out.push({ low: x, high: x, decimals, unit, label });
   };
-  add(b.motor_w, "W", "Motor");
+  // D-73: e-motos are quoted in peak kW ("12.5 kW")
+  const kw = b.motor_w ? Number(b.motor_w) / 1000 : null;
+  add(kw, "kW", "Peak power", kw !== null && kw % 1 ? 1 : 0);
   add(b.range_mi, "mi", "Range");
   add(b.top_speed_mph, "mph", "Top speed");
   return out;

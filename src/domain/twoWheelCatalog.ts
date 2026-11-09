@@ -1,7 +1,9 @@
 /**
- * D-71: starter data for motorcycles and e-bikes. Six common models of each, with their stock numbers, so picking one
+ * D-71: starter data for motorcycles and e-motos (D-73; stored as kind "ebike"). Six common models of each, with their
+ * stock numbers, so picking one
  * in the Add vehicle form fills blank specs the way the factory-spec table does for cars. Every figure says where it
- * came from; anything that couldn't be checked against a published spec (checked 2026-11-02) is marked ESTIMATE and is
+ * came from; anything that couldn't be checked against a published spec (motorcycles checked 2026-11-02, e-motos
+ * 2026-11-08) is marked ESTIMATE and is
  * shown that way in the app. Prices are US list prices (MSRP before destination and fees) and change often.
  */
 import type { VehicleKind } from "./vehicleKind";
@@ -26,22 +28,25 @@ export type MotorcycleSpec = {
   sources: string[];
 };
 
+/** D-73: an e-moto, a light electric motorcycle (Sur-Ron, Talaria, Stark). Kind "ebike" in the data. */
 export type EbikeSpec = {
   kind: "ebike";
   make: string;
   model: string;
   year: number;
   price_usd: Fig;
-  /** nominal (continuous) motor power */
+  /** PEAK motor power in watts (what e-moto makers quote) */
   motor_w: Fig;
+  /** pack voltage and capacity */
+  battery_v: Fig;
   battery_wh: Fig;
-  /** the maker's or a test's real-world range, mixed riding */
+  /** the maker's range, at the steady speed it states */
   range_mi: Fig;
-  /** assisted top speed (its US e-bike class) */
+  /** unrestricted top speed (some are sold limited, e.g. 20 mph in Canada) */
   top_speed_mph: Fig;
-  /** D-72: US class as sold (1 pedal assist to 20 mph, 2 throttle to 20 mph, 3 pedal assist to 28 mph) */
-  ebike_class: Fig;
   weight_lb: Fig;
+  /** sold plated for the road (true) or off-road only (false) */
+  street_legal: { v: boolean; est?: true };
   sources: string[];
 };
 
@@ -161,98 +166,102 @@ export const MOTORCYCLES: MotorcycleSpec[] = [
 export const EBIKES: EbikeSpec[] = [
   {
     kind: "ebike",
-    make: "Rad Power Bikes",
-    model: "RadRover 6 Plus",
-    year: 2024,
-    price_usd: est(1699),
-    motor_w: src(750),
-    battery_wh: src(672),
-    range_mi: est(45),
-    top_speed_mph: est(20),
-    ebike_class: est(2),
-    weight_lb: est(73),
-    sources: ["https://electricbikereport.com/rad-power-bikes-radrover-6-review/ (motor, battery)"],
+    make: "Sur-Ron",
+    model: "Light Bee X",
+    year: 2025,
+    price_usd: est(4500),
+    motor_w: src(8000),
+    battery_v: src(60),
+    battery_wh: src(2400),
+    range_mi: src(47),
+    top_speed_mph: src(47),
+    weight_lb: src(126),
+    street_legal: { v: false, est: true },
+    sources: [
+      "https://us.surron.com/lightbee/x (8,000 W peak, 60V 40Ah, 46.6 mph, 46.6 mi at 24.9 mph, 125.6 lb curb)",
+    ],
   },
   {
     kind: "ebike",
-    make: "Aventon",
-    model: "Level.2",
-    year: 2024,
-    price_usd: est(1799),
-    motor_w: est(500),
-    battery_wh: est(672),
+    make: "Sur-Ron",
+    model: "Ultra Bee",
+    year: 2025,
+    price_usd: est(6900),
+    motor_w: src(12500),
+    battery_v: src(74),
+    battery_wh: src(4070),
+    range_mi: src(62),
+    top_speed_mph: src(56),
+    weight_lb: src(187),
+    street_legal: { v: false, est: true },
+    sources: ["https://us.surron.com/ultrabee/c (12.5 kW peak, 74V 55Ah, 56 mph, 62 mi at 31 mph, 187 lb)"],
+  },
+  {
+    kind: "ebike",
+    make: "Talaria",
+    model: "Sting R MX4",
+    year: 2025,
+    price_usd: est(4300),
+    motor_w: est(8000),
+    battery_v: src(60),
+    battery_wh: src(2700),
+    range_mi: src(62),
+    top_speed_mph: est(47),
+    weight_lb: src(145),
+    street_legal: { v: false },
+    sources: [
+      "https://talariacanada.com/talaria-sting-r-mx4/ (60V 45Ah, 2,700 Wh, 62 mi at 15 mph, 145 lb, off-road use only; MSRP CA$5,799.99)",
+      "https://talaria-ebikes.com/product/talaria-sting-r-mx4-expert-edition/ (47+ mph unrestricted, for the Expert)",
+    ],
+  },
+  {
+    kind: "ebike",
+    make: "E Ride Pro",
+    model: "Pro-SS 3.0",
+    year: 2025,
+    price_usd: est(5000),
+    motor_w: src(15800),
+    battery_v: src(72),
+    battery_wh: src(3600),
     range_mi: est(60),
-    top_speed_mph: est(28),
-    ebike_class: est(3),
-    weight_lb: est(63),
-    sources: ["https://www.aventon.com/blogs/aventon_bikes/meet-level-2-aventons-first-electric-bike-with-a-torque-sensor (model)"],
+    top_speed_mph: est(60),
+    weight_lb: est(150),
+    street_legal: { v: false, est: true },
+    sources: ["https://media.gritshift.com/e-ride-pro-ss-3-0/ (15.8 kW peak, 72V 50Ah, about $5,000)"],
   },
   {
     kind: "ebike",
-    make: "Specialized",
-    model: "Turbo Vado 4.0",
-    year: 2025,
-    price_usd: est(4100),
-    motor_w: src(250),
-    battery_wh: src(710),
-    range_mi: est(50),
-    top_speed_mph: est(28),
-    ebike_class: src(3),
-    weight_lb: src(58),
-    sources: [
-      "https://www.specialized.com/us/en/turbo-vado-2-40/p/206159 (motor, battery, weight)",
-      "https://www.bikeradar.com/reviews/bikes/electric-bikes/specialized-turbo-vado-4-0-review (US price at launch)",
-    ],
-  },
-  {
-    kind: "ebike",
-    make: "Lectric",
-    model: "XP 3.0",
+    make: "Segway",
+    model: "X260",
     year: 2024,
-    price_usd: src(999),
-    motor_w: src(500),
-    battery_wh: src(499),
-    range_mi: src(24),
-    top_speed_mph: src(28),
-    ebike_class: est(3),
-    weight_lb: src(62),
+    price_usd: est(4600),
+    motor_w: est(5000),
+    battery_v: est(74),
+    battery_wh: est(2370),
+    range_mi: src(75),
+    top_speed_mph: src(47),
+    weight_lb: est(123),
+    street_legal: { v: false, est: true },
     sources: [
-      "https://electricbikereview.com/lectric-ebikes/lectric-xp-3-0-review/ (motor, battery, price)",
-      "https://riderguide.com/reviews/lectric-xp-3-0-electric-bike-review/ (tested range, top speed, weight)",
+      "https://www.facebook.com/electrekco/posts/segway-launches-60-mph-electric-dirt-bike-and-its-basically-a-full-e-motorcycles/1409136157918778/ (46.6 mph, 74.6 mi, 32Ah)",
     ],
   },
   {
     kind: "ebike",
-    make: "Super73",
-    model: "S2 SE",
+    make: "Stark Future",
+    model: "Varg MX 1.2",
     year: 2025,
-    price_usd: src(3145),
-    motor_w: src(500),
-    battery_wh: src(780),
-    range_mi: src(25),
-    top_speed_mph: est(28),
-    ebike_class: est(2),
-    weight_lb: est(70),
-    sources: [
-      "https://super73.com/products/super73-s2-se-legacy (price)",
-      "https://super73.com/pages/compare-bikes (motor, battery, range 20-25 mi)",
-    ],
-  },
-  {
-    kind: "ebike",
-    make: "Trek",
-    model: "Allant+ 7",
-    year: 2024,
-    price_usd: src(3599),
-    motor_w: est(250),
-    battery_wh: src(500),
+    price_usd: est(13590),
+    motor_w: src(60000),
+    battery_v: src(420),
+    battery_wh: src(7200),
     range_mi: est(50),
-    top_speed_mph: est(20),
-    ebike_class: est(1),
-    weight_lb: src(54),
+    top_speed_mph: est(60),
+    weight_lb: src(260),
+    street_legal: { v: false },
     sources: [
-      "https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/electric-hybrid-bikes/allant/allant-7/a/30918/ (weight, size L)",
-      "https://electricbikereview.com/trek/allant-plus-7/ (price, Bosch Performance Line CX, 500 Wh)",
+      "https://starkfuture.com/products/stark-varg (80 hp peak, 7.2 kWh 420 V, 260 lb; the road-legal model is the Varg SM)",
+      "https://www.electricmotiontech.com/home/stark-varg ($13,590 reported for the earlier model)",
     ],
   },
 ];
@@ -281,22 +290,17 @@ export const MOTORCYCLE_MAKES = [
   "CFMoto",
 ];
 export const EBIKE_MAKES = [
-  "Rad Power Bikes",
-  "Aventon",
-  "Lectric",
-  "Specialized",
-  "Trek",
+  "Sur-Ron",
+  "Talaria",
+  "E Ride Pro",
+  "Segway",
+  "Stark Future",
+  "CAKE",
+  "Rawrr",
+  "79Bike",
   "Super73",
-  "Cannondale",
-  "Giant",
-  "Gazelle",
-  "Tern",
-  "Riese & Müller",
-  "Ride1Up",
-  "Velotric",
-  "Juiced",
-  "Himiwav",
-  "Heybike",
+  "Zero",
+  "KTM",
 ];
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -321,19 +325,17 @@ const MODEL_NAMES: Record<"motorcycle" | "ebike", Record<string, string[]>> = {
     "Royal Enfield": ["Classic 350", "Hunter 350", "Interceptor 650", "Continental GT 650", "Himalayan"],
   },
   ebike: {
-    "Rad Power Bikes": ["RadRover 6 Plus", "RadCity 5 Plus", "RadRunner 3 Plus", "RadWagon 4", "RadExpand 5"],
-    Aventon: ["Level.2", "Pace 500.3", "Sinch.2", "Abound", "Aventure.2"],
-    Lectric: ["XP 3.0", "XP Lite 2.0", "XPeak", "XPress", "Xpedition"],
-    Specialized: ["Turbo Vado 4.0", "Turbo Vado SL", "Turbo Como", "Turbo Tero", "Turbo Levo"],
-    Trek: ["Allant+ 7", "FX+ 2", "Verve+ 3", "Fetch+ 2", "Rail 9.7"],
-    Super73: ["S2 SE", "R Adventure", "ZX", "C1X"],
-    Cannondale: ["Tesoro Neo X", "Adventure Neo", "Moterra Neo"],
-    Giant: ["Explore E+", "Talon E+", "FastRoad E+", "Trance X E+"],
-    Gazelle: ["Ultimate C380", "Eclipse", "Medeo T9"],
-    Tern: ["GSD", "HSD", "Vektron"],
-    Ride1Up: ["700 Series", "Prodigy", "Revv 1"],
-    Velotric: ["Discover 2", "Nomad 1", "Packer 1"],
-    Juiced: ["RipRacer", "Scorpion X", "CrossCurrent X"],
+    "Sur-Ron": ["Light Bee X", "Light Bee S", "Ultra Bee", "Hyper Bee", "Storm Bee"],
+    Talaria: ["Sting R MX4", "Sting R MX4 Expert", "Sting MX3", "XXX", "X3 Pro", "X3 Mini", "Komodo", "Dragon"],
+    "E Ride Pro": ["Pro-SS 3.0", "Pro-SS 2.0", "Pro-S"],
+    Segway: ["X260", "X160"],
+    "Stark Future": ["Varg MX 1.2", "Varg EX", "Varg SM"],
+    CAKE: ["Kalk OR", "Kalk&", "Ösa+", "Makka"],
+    Rawrr: ["Mantis", "Mantis X"],
+    "79Bike": ["Falcon M"],
+    Super73: ["R Adventure", "S2 SE", "ZX"],
+    Zero: ["FX", "FXE"],
+    KTM: ["Freeride E"],
   },
 };
 
@@ -346,11 +348,10 @@ export function starterModels(kind: VehicleKind, make: string): string[] {
   return out;
 }
 
-/** What each US e-bike class means, in the words a buyer or insurer would use. */
-export const EBIKE_CLASSES = [
-  { id: 1, label: "Class 1", detail: "Pedal assist only, up to 20 mph" },
-  { id: 2, label: "Class 2", detail: "Throttle allowed, up to 20 mph" },
-  { id: 3, label: "Class 3", detail: "Pedal assist up to 28 mph" },
+/** D-73: road use, as a choice in the form. */
+export const ROAD_USE = [
+  { id: "offroad", label: "Off-road only" },
+  { id: "street", label: "Street legal" },
 ] as const;
 
 /** The starter entry for exactly this make and model, or null. */
@@ -366,12 +367,13 @@ export function starterSummary(s: TwoWheelSpec): string {
     s.kind === "motorcycle"
       ? [n(s.engine_cc, "cc"), n(s.hp, "hp"), n(s.torque_lbft, "lb-ft"), n(s.weight_lb, "lb"), n(s.zero_to_sixty_s, "s 0–60", 1)]
       : [
-          `${s.ebike_class.est ? "~" : ""}Class ${s.ebike_class.v}`,
-          n(s.motor_w, "W"),
+          n({ ...s.motor_w, v: s.motor_w.v / 1000 }, "kW peak", 1),
+          n(s.battery_v, "V"),
           n(s.battery_wh, "Wh"),
           n(s.range_mi, "mi range"),
           n(s.top_speed_mph, "mph"),
           n(s.weight_lb, "lb"),
+          `${s.street_legal.est ? "~" : ""}${s.street_legal.v ? "street legal" : "off-road only"}`,
         ];
   const price = `${s.price_usd.est ? "~" : ""}$${s.price_usd.v.toLocaleString()} new`;
   const text = [...parts.filter(Boolean), price].join(" · ");

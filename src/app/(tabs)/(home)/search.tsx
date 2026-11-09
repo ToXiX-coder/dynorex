@@ -23,7 +23,7 @@ import { usePublicMedia } from "@/features/social/usePublicMedia";
 import { useFlags } from "@/providers/AppProviders";
 import { analytics } from "@/services/analytics";
 import type { SearchHit } from "@/services/supabase/database.types";
-import { VEHICLE_KINDS, type VehicleKind } from "@/domain/vehicleKind";
+import { kindPlural, VEHICLE_KINDS, type VehicleKind } from "@/domain/vehicleKind";
 import { border, color, radius, space, touch, type } from "@/theme/tokens";
 import { withPress } from "@/theme/press";
 import { themed } from "@/theme/themed";
@@ -174,7 +174,7 @@ export default function Search() {
             {VEHICLE_KINDS.map((k) => (
               <Chip
                 key={k.id}
-                label={k.id === "car" ? "Cars" : k.id === "motorcycle" ? "Motorcycles" : "E-bikes"}
+                label={kindPlural(k.id)}
                 selected={only === k.id}
                 onPress={() => setOnly((cur) => (cur === k.id ? null : k.id))}
               />

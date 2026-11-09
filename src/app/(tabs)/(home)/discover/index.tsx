@@ -11,7 +11,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/feedback/Stat
 import { SearchIcon } from "@/components/icons";
 import { BuildCard } from "@/components/social/BuildCard";
 import { Text } from "@/components/Text";
-import { kindOf, VEHICLE_KINDS, type VehicleKind } from "@/domain/vehicleKind";
+import { kindOf, kindPlural, kindNoun, VEHICLE_KINDS, type VehicleKind } from "@/domain/vehicleKind";
 import { useAuth } from "@/features/auth/AuthProvider";
 import type { MappedError } from "@/features/auth/errors";
 import { NearbySection } from "@/features/social/NearbySection";
@@ -121,7 +121,7 @@ export default function Discover() {
           {VEHICLE_KINDS.map((k) => (
             <Chip
               key={k.id}
-              label={k.id === "car" ? "Cars" : k.id === "motorcycle" ? "Motorcycles" : "E-bikes"}
+              label={kindPlural(k.id)}
               selected={only === k.id}
               onPress={() => setOnly((cur) => (cur === k.id ? null : k.id))}
             />
@@ -155,7 +155,7 @@ export default function Discover() {
           ) : null}
           {shown!.length === 0 && only ? (
             <Text muted>
-              {`No ${only === "car" ? "car" : only === "motorcycle" ? "motorcycle" : "e-bike"} builds in this list yet.${hasMore ? " Load more to look further." : ""}`}
+              {`No ${only === "motorcycle" ? "motorcycle" : kindNoun(only)} builds in this list yet.${hasMore ? " Load more to look further." : ""}`}
             </Text>
           ) : null}
           {shown!.map((b) => (

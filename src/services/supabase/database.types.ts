@@ -136,6 +136,9 @@ export type VehicleRow = {
   /** D-72, e-bikes: US class 1-3, and the frame serial (private like a VIN, never in a public view) */
   ebike_class?: number | null;
   frame_serial?: string | null;
+  /** D-73, e-motos: pack voltage, and plated for the road (true) or off-road only (false) */
+  battery_v?: number | null;
+  street_legal?: boolean | null;
   budget_currency?: string | null;
 };
 export type BuildRow = {
@@ -333,6 +336,9 @@ export type PublicBuild = {
   /** D-72 */
   engine_cc?: number | null;
   ebike_class?: number | null;
+  /** D-73 */
+  battery_v?: number | null;
+  street_legal?: boolean | null;
 };
 export type PublicSpecRow = Omit<
   SpecEstimateRow,

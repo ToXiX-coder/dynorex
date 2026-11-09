@@ -38,17 +38,20 @@ export const MOTORCYCLE_PRESETS: typeof MAINTENANCE_PRESETS = [
   { title: "Battery", miles: null, months: null },
 ];
 
-/** D-72: e-bike jobs. */
+
+/** D-73: e-moto jobs (light electric motorcycles). Off-road hours are hard on bearings and chains. */
 export const EBIKE_PRESETS: typeof MAINTENANCE_PRESETS = [
-  { title: "Chain clean and lube", miles: 150, months: null },
-  { title: "Tire pressure check", miles: null, months: 1 },
+  { title: "Chain clean and lube", miles: 200, months: null },
+  { title: "Chain tension check", miles: 200, months: null },
+  { title: "Bolt check", miles: 300, months: 3 },
   { title: "Brake pads", miles: null, months: null },
-  { title: "Brake bleed", miles: null, months: 12 },
-  { title: "Battery health check", miles: null, months: 6 },
-  { title: "Bolt torque check", miles: null, months: 6 },
-  { title: "Tune-up", miles: 1000, months: 12 },
-  { title: "Chain replacement", miles: 2000, months: null },
-  { title: "Firmware update", miles: null, months: null },
+  { title: "Brake fluid flush", miles: null, months: 12 },
+  { title: "Battery balance and health check", miles: null, months: 6 },
+  { title: "Swingarm and linkage bearings", miles: 1000, months: null },
+  { title: "Fork oil and seals", miles: 1500, months: 12 },
+  { title: "Rear shock service", miles: 3000, months: null },
+  { title: "Primary drive check", miles: 1500, months: null },
+  { title: "Wiring and connector check", miles: null, months: 6 },
   { title: "Tires", miles: null, months: null },
 ];
 

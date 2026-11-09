@@ -141,6 +141,8 @@ function toPublic(b: BuildRow): PublicBuild {
     top_speed_mph: v.top_speed_mph ?? null,
     engine_cc: v.engine_cc ?? null,
     ebike_class: v.ebike_class ?? null,
+    battery_v: v.battery_v ?? null,
+    street_legal: v.street_legal ?? null,
   };
 }
 const publicBuilds = () => S.builds.filter(isPublic).map(toPublic);
