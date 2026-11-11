@@ -440,7 +440,7 @@ export function VehicleFormView({
             value={f.trim_level}
             onChangeText={set("trim_level")}
             maxLength={50}
-            placeholder={kind === "car" ? "Premium" : kind === "motorcycle" ? "ABS" : "Step-thru"}
+            placeholder={kind === "car" ? "Premium" : kind === "motorcycle" ? "ABS" : "Street"}
             error={errors.trim_level}
           />
         </View>
@@ -450,7 +450,7 @@ export function VehicleFormView({
             value={f.nickname}
             onChangeText={set("nickname")}
             maxLength={60}
-            placeholder={kind === "car" ? "Weekend Warrior" : kind === "motorcycle" ? "Canyon Carver" : "Commuter"}
+            placeholder={kind === "car" ? "Weekend Warrior" : kind === "motorcycle" ? "Canyon Carver" : "Trail Bee"}
             error={errors.nickname}
           />
         </View>
