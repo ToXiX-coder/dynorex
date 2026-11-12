@@ -70,6 +70,7 @@
     "pitch": "node scripts/pitch.mjs",
     "pitch:web": "node scripts/pitch.mjs --web",
     "pitch:export": "node scripts/pitch-export.mjs",
+    "demo:site": "node scripts/demo-site.mjs",
     "preflight": "node scripts/preflight.mjs",
     "perf:db": "vitest run --config vitest.perf.config.mts",
     "lint": "eslint .",
