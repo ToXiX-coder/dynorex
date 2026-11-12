@@ -27,6 +27,7 @@ import { qrSvg } from "@/domain/qrSvg";
 import type { MappedError } from "@/features/auth/errors";
 import { historyPath, recordsService } from "@/features/garage/recordsService";
 import { RecordEntryCard, RecordLegend, RecordStrip } from "@/features/record/RecordBits";
+import { BuyerBrief } from "@/features/record/BuyerBrief";
 import { recordService } from "@/features/record/recordService";
 import { UploadList } from "@/components/build/UploadList";
 import { usePhotoUploads } from "@/features/garage/usePhotoUploads";
@@ -151,6 +152,7 @@ export default function BuildRecordScreen() {
             onChange={load}
             primary={!next}
           />
+          <BuyerBrief rec={rec} side="seller" />
           <ListingSheet record={rec} token={data.link?.token ?? null} />
           <Transfer vehicleId={id} kind={rec.car.kind ?? null} openUntil={data.transfer} onChange={load} />
         </>

@@ -22,6 +22,7 @@ import {
 } from "@/domain/record";
 import { SPEC_DISCLAIMER } from "@/domain/specs";
 import type { MappedError } from "@/features/auth/errors";
+import { BuyerBrief } from "@/features/record/BuyerBrief";
 import { FlagLine, RecordEntryCard, RecordLegend, RecordStrip } from "@/features/record/RecordBits";
 import { recordService } from "@/features/record/recordService";
 import { haptic } from "@/services/haptics";
@@ -96,6 +97,7 @@ export default function BuildRecordPage() {
         </Text>
         <RecordStrip entries={rec.entries} />
       </Card>
+      <BuyerBrief rec={rec} side="buyer" />
 
       <VinCheckCard token={String(token)} kind={rec.car.kind ?? null} />
       <RecordLegend />
