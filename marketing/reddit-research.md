@@ -28,6 +28,34 @@ Only the interviews in [outreach.md](outreach.md) can show that.
    every week or two in 2026, plus claim stories: a payout with undeclared mods, a motorcycle whose declared mods
    didn't carry over at renewal, and a claim denied over a mod the owner didn't know about.
 
+## Evidence table: one link per comment
+
+Each link opens that exact comment on Reddit. To use a quote in a school project: open the link, copy the words
+exactly as written, and cite it as `u/username, r/subreddit, date, link`. Copy it yourself from the page so the quote
+is word for word. The "What it says" column is my summary, not their wording.
+
+| # | Proves | Where, date, upvotes | What it says (summary) | Link |
+|---|---|---|---|---|
+| 1 | People want the record to go to the buyer | r/Miata, 2025-04-03, 48 | A seller gathering invoices to sell their car wanted an app that holds everything and moves the car's record, mods included, to the buyer | https://www.reddit.com/r/Miata/comments/1jqfojs/comment/ml6llup/ |
+| 2 | It's the most-asked-for feature | r/Miata, 2025-04-03, 22 | The app's developer says the transfer is the feature they get asked for most | https://www.reddit.com/r/Miata/comments/1jqfojs/comment/ml6mwx9/ |
+| 3 | Buyers avoid modded cars | r/Audi, 2023-11-27, 347 (top comment) | Most people won't buy a modded car because they assume it was beaten on | https://www.reddit.com/r/Audi/comments/185ecpx/comment/kb13bs0/ |
+| 4 | Receipts fix it | r/Audi, 2023-11-27, 49 | Same thread: with all the receipts and paperwork for the mods, it should sell fast | https://www.reddit.com/r/Audi/comments/185ecpx/comment/kb153ra/ |
+| 5 | Buyers want proof | r/Audi, 2023-11-28 | Would buy it with full service history with proof and every mod documented | https://www.reddit.com/r/Audi/comments/185ecpx/comment/kb64wdx/ |
+| 6 | Shop records matter | r/Audi, 2023-11-28 | It depends on the mods and whether there's a clean paper trail from reputable shops | https://www.reddit.com/r/Audi/comments/185ecpx/comment/kb2qc5z/ |
+| 7 | Mods only hold value with proof | r/cars, 2018-09-05 | A modded car usually loses money unless it's sought after and has the paper to prove the work | https://www.reddit.com/r/cars/comments/9d18gw/comment/e5f2pvg/ |
+| 8 | Records help a private sale | r/askcarguys, 2026-09-22, 9 | Private buyers were excited to get the notebook and parts manuals showing how the car was cared for | https://www.reddit.com/r/askcarguys/comments/1wnfixy/comment/pbf52h9/ |
+| 9 | Current tools fail at the car | r/askcarguys, 2026-09-22, 14 | Spreadsheets would work, but they want to log the job in the moment, not after cleaning up and going inside | https://www.reddit.com/r/askcarguys/comments/1wnfixy/comment/pbem1x6/ |
+| 10 | Builders log for the sale | r/projectcar, 2025-12-16, 4 | Keeps a spreadsheet of every part with links, to track upgrades or for if they sell | https://www.reddit.com/r/projectcar/comments/1pobuqp/comment/nue3323/ |
+| 11 | Sellers already keep records to be honest | r/Diesel, 2024-08-21, 7 | Keeps a 3-ring binder of everything done to the truck so they don't mislead buyers | https://www.reddit.com/r/Diesel/comments/1exeean/comment/lj5lcr0/ |
+| 12 | E-moto buyers can't check the battery | r/Surron, 2025-06-21 | Asks what app could even show battery health on a stock Sur-Ron | https://www.reddit.com/r/Surron/comments/1lgx596/comment/myztrdb/ |
+| 13 | E-moto mileage can't be trusted | r/Surron, 2025-06-21 | There's no way to check mileage; the display can be swapped, which resets it | https://www.reddit.com/r/Surron/comments/1lgx596/comment/mz0dguv/ |
+| 14 | Unknown mods cause insurance trouble | r/CarTalkUK, 2024-09-10 | Knows someone whose claim was denied over a mod they didn't know the car had | https://www.reddit.com/r/CarTalkUK/comments/1fdetwe/comment/lmfav02/ |
+| 15 | Pay once, not monthly | r/Miata, 2025-04-03, 4 | Would rather pay once than subscribe | https://www.reddit.com/r/Miata/comments/1jqfojs/comment/ml7p6uf/ |
+| 16 | Hide the total spent | r/Miata, 2025-04-03, 3 | Asked for a toggle to hide the total spent | https://www.reddit.com/r/Miata/comments/1jqfojs/comment/ml8v62g/ |
+
+Whole threads, for counts: r/Audi "Do mods scare buyers?" (286 upvotes, 271 comments), r/askcarguys "How do you
+actually keep track…" (99 upvotes, 481 comments), r/Miata Track My Mods launch (460 upvotes, 182 comments).
+
 ## The themes, with where they came from
 
 ### 1. How people track builds today (most do it badly or not at all)
