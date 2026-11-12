@@ -54,7 +54,7 @@ export default function InsuranceList() {
   if (mods === null && !error) return <LoadingState label="Making your mod list" />;
   const car = vehicle
     ? `${vehicle.year} ${vehicle.make} ${vehicle.model}${vehicle.trim_level ? ` ${vehicle.trim_level}` : ""}`
-    : "your car";
+    : "your vehicle";
   const fitted = (mods ?? [])
     .filter((m) => m.status === "complete")
     .sort((a, b) => (a.installed_on ?? "").localeCompare(b.installed_on ?? ""))
@@ -93,7 +93,7 @@ export default function InsuranceList() {
           expression="wrenching"
           message="No finished mods yet"
           detail="Mark a mod complete and it shows up here."
-          action={{ title: "Back to the car", onPress: () => router.back() }}
+          action={{ title: "Go back", onPress: () => router.back() }}
         />
       ) : (
         <>

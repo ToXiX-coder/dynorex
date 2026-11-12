@@ -1,0 +1,11 @@
+# Dynorex. Public builds, profiles and events may be indexed; private links and accounts may not.
+User-agent: *
+Disallow: /history/
+Disallow: /confirm/
+Disallow: /chat/
+Disallow: /offers/
+Disallow: /requests/
+Disallow: /garage/
+Disallow: /settings
+Disallow: /onboarding/
+Disallow: /_sitemap

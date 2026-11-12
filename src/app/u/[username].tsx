@@ -28,6 +28,8 @@ import type { PublicBuild } from "@/services/supabase/database.types";
 import { useAction } from "@/hooks/useAction";
 import { color, space } from "@/theme/tokens";
 import { backOr } from "@/components/navigation/stackOptions";
+import { PageMeta } from "@/components/seo/PageMeta";
+import { metaDescription } from "@/domain/seo";
 
 /**
  * dynorex.app/u/:username. Reads only the public_profiles and public_builds views, which already hide
@@ -92,6 +94,10 @@ export default function PublicProfileScreen() {
 
   return (
     <Screen>
+      <PageMeta
+        title={p.display_name ? `${p.display_name} (@${p.username})` : `@${p.username}`}
+        description={metaDescription(`@${p.username}'s garage and builds on Dynorex.`, p.bio)}
+      />
       <Stack.Screen options={{ title: `@${p.username}` }} />
       <View style={styles.header}>
         <DriverBadge gear={parseGear(p.driver_gear, p.build_goal)} size={72} />

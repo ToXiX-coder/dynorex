@@ -39,13 +39,7 @@ export const normalizeCarbEo = (s: string) => s.trim().toUpperCase().replace(/\s
 export const isCarbEo = (s: string) => /^D-\d{1,4}-\d{1,3}$/.test(normalizeCarbEo(s));
 
 export type ConfirmBlock =
-  | "removed"
-  | "earlier_owner"
-  | "not_finished"
-  | "dyno"
-  | "emissions"
-  | "already_confirmed"
-  | null;
+  "removed" | "earlier_owner" | "not_finished" | "dyno" | "emissions" | "already_confirmed" | null;
 
 /** Why a shop can't be asked about this entry, or null when it can. Mirrors record_confirm_block. */
 export function confirmBlock(e: RecordEntry): ConfirmBlock {
@@ -85,13 +79,17 @@ const day = (iso: string) =>
   });
 export const recordDate = day;
 
-export type FlagId = "removed" | "reopened" | "edited_after_confirmation" | "shop_declined" | "logged_late" | "odometer";
+export type FlagId =
+  "removed" | "reopened" | "edited_after_confirmation" | "shop_declined" | "logged_late" | "odometer";
 export interface Flag {
   id: FlagId;
   text: string;
 }
 
-export function evidence(e: RecordEntry, backwards?: ReadonlySet<string>): { level: Level; labels: string[]; flags: Flag[] } {
+export function evidence(
+  e: RecordEntry,
+  backwards?: ReadonlySet<string>,
+): { level: Level; labels: string[]; flags: Flag[] } {
   const labels: string[] = [e.earlier_owner ? "Logged by an earlier owner" : "Owner-entered"];
   const flags: Flag[] = [];
   let level: Level = 0;
@@ -99,7 +97,9 @@ export function evidence(e: RecordEntry, backwards?: ReadonlySet<string>): { lev
   if (e.receipts.length) {
     level = 1;
     const first = day([...e.receipts].map((r) => r.uploaded_at).sort()[0]!);
-    labels.push(e.receipts.length === 1 ? `Receipt uploaded ${first}` : `${e.receipts.length} receipts, first uploaded ${first}`);
+    labels.push(
+      e.receipts.length === 1 ? `Receipt uploaded ${first}` : `${e.receipts.length} receipts, first uploaded ${first}`,
+    );
   }
   if (e.has_sheet) {
     level = 1;
@@ -116,13 +116,16 @@ export function evidence(e: RecordEntry, backwards?: ReadonlySet<string>): { lev
   const c = e.confirmation;
   if (c?.decision === "confirmed") {
     const who = c.shop_city ? `${c.shop_name}, ${c.shop_city}` : c.shop_name;
-    labels.push(`Confirmed by ${who} ${c.via === "shop_account" ? "(Dynorex shop)" : "(through a link)"} on ${day(c.at)}`);
+    labels.push(
+      `Confirmed by ${who} ${c.via === "shop_account" ? "(Dynorex shop)" : "(through a link)"} on ${day(c.at)}`,
+    );
     if (c.version === e.version) level = 3;
     else flags.push({ id: "edited_after_confirmation", text: "Edited after the shop confirmed it" });
   } else if (c?.decision === "declined") {
     flags.push({ id: "shop_declined", text: `${c.shop_name} declined to confirm this` });
   }
-  if (e.version > 0) labels.push(`Edited ${e.version === 1 ? "once" : `${e.version} times`}, last on ${day(e.revisions.at(-1)!.at)}`);
+  if (e.version > 0)
+    labels.push(`Edited ${e.version === 1 ? "once" : `${e.version} times`}, last on ${day(e.revisions.at(-1)!.at)}`);
 
   const late = Math.floor((Date.parse(e.logged_at) - Date.parse(`${e.date}T00:00:00Z`)) / DAY);
   if (late > LATE_DAYS) flags.push({ id: "logged_late", text: `Logged ${late} days after the work` });
@@ -212,7 +215,12 @@ function line(e: RecordEntry, back: ReadonlySet<string>): string {
     bits.push([e.whp && `${e.whp} whp`, e.wtq && `${e.wtq} wtq`].filter(Boolean).join(" / ") + ", owner-reported");
   }
   if (e.installed_by) bits.push(`${e.type === "dyno" ? "at" : "by"} ${e.installed_by}`);
-  if (e.type === "mod" && e.category && EMISSIONS_CATEGORIES.includes(e.category) && e.compliance !== "not_emissions_related") {
+  if (
+    e.type === "mod" &&
+    e.category &&
+    EMISSIONS_CATEGORIES.includes(e.category) &&
+    e.compliance !== "not_emissions_related"
+  ) {
     bits.push(e.carb_eo ? `CARB EO ${e.carb_eo}` : COMPLIANCE_LABELS[e.compliance ?? "unknown"]);
   }
   const marks: string[] = [];
@@ -236,7 +244,8 @@ export function buildSheetText(rec: BuildRecord, link: string | null): string {
     "",
     ...live.map((e) => line(e, back)),
   ];
-  if (removed) out.push("", `${removed} removed ${removed === 1 ? "entry is" : "entries are"} shown on the live record.`);
+  if (removed)
+    out.push("", `${removed} removed ${removed === 1 ? "entry is" : "entries are"} shown on the live record.`);
   if (link) out.push("", `Full record, with dates, paperwork and edit history: ${link}`);
   out.push("", RECORD_DISCLAIMER);
   return out.join("\n");
@@ -259,10 +268,9 @@ export function listingAdText(rec: BuildRecord, link: string | null, maxMods = 8
   const services = live.filter((e) => e.type === "maintenance").slice(0, 3);
   const dyno = live.find((e) => e.type === "dyno" && e.whp);
   const modLine = (e: RecordEntry) => {
-    const marks = [
-      e.receipts.length ? "receipt" : null,
-      evidence(e).level === 3 ? "shop-confirmed" : null,
-    ].filter(Boolean);
+    const marks = [e.receipts.length ? "receipt" : null, evidence(e).level === 3 ? "shop-confirmed" : null].filter(
+      Boolean,
+    );
     return `- ${[e.brand, e.title].filter(Boolean).join(" ")}${e.installed_by && e.installed_by.toLowerCase() !== "self" ? `, fitted by ${e.installed_by}` : ""}${marks.length ? ` (${marks.join(", ")})` : ""}`;
   };
   const out = [
@@ -342,3 +350,26 @@ export function normalizeClaimCode(input: string): string {
 export const isClaimCode = (s: string) => new RegExp(`^[${CODE_ALPHABET}]{4}-[${CODE_ALPHABET}]{4}$`).test(s);
 export const normalizeVin = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
 export const isVinShape = (s: string) => /^[A-HJ-NPR-Z0-9]{17}$/.test(normalizeVin(s));
+
+/** An e-moto's frame number (D-71: letters, digits and hyphens). Compared on letters and digits only. */
+export const isFrameShape = (s: string) =>
+  /^[A-Z0-9-]{3,40}$/.test(s.trim().toUpperCase()) && normalizeVin(s).length >= 3;
+/** What identifies a vehicle to its buyer (D-74): a VIN, or an e-moto's frame number. */
+export const identFor = (kind: string | null | undefined) =>
+  kind === "ebike"
+    ? {
+        name: "frame number",
+        short: "Frame number",
+        where: "Read it off the frame by the steering head.",
+        ok: isFrameShape,
+      }
+    : { name: "VIN", short: "VIN", where: "Read it off the windshield or the door jamb.", ok: isVinShape };
+/** Either one: the claim screen doesn't know the vehicle's kind until the code is checked. */
+export const isIdentShape = (s: string) => isVinShape(s) || isFrameShape(s);
+
+/**
+ * D-74: Bike Index's public search for a frame number, stolen or not. Built from what the buyer typed, never
+ * from the record (the record's frame number stays private, like a VIN). Nothing is sent until they tap it.
+ */
+export const bikeIndexSearchUrl = (frame: string) =>
+  `https://bikeindex.org/bikes?serial=${encodeURIComponent(frame.trim().toUpperCase())}&stolenness=all`;

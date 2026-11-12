@@ -84,11 +84,50 @@ export function kindDetail(v: {
   engine_cc?: number | null;
   motor_w?: number | string | null;
   battery_v?: number | null;
+  mod_motor_w?: number | null;
+  mod_battery_v?: number | null;
 }): string | null {
   const k = kindOf(v);
   if (k === "motorcycle" && v.engine_cc) return `${Number(v.engine_cc).toLocaleString()}cc`;
-  if (k === "ebike") return [kwText(v.motor_w), v.battery_v ? `${v.battery_v}V` : null].filter(Boolean).join(" · ") || null;
+  if (k === "ebike") {
+    const volts = v.mod_battery_v ?? v.battery_v;
+    return [kwText(v.mod_motor_w ?? v.motor_w), volts ? `${volts}V` : null].filter(Boolean).join(" · ") || null;
+  }
   return null;
+}
+
+/**
+ * D-74: what an e-moto runs now. Each number comes from its newest complete mod that sets it (null: stock applies).
+ * Mirrors the mod_* columns of public.public_builds.
+ */
+export function emotoCurrent(
+  mods: readonly {
+    status: string;
+    deleted_at?: string | null;
+    installed_on?: string | null;
+    status_changed_at?: string | null;
+    sets_motor_w?: number | null;
+    sets_battery_v?: number | null;
+    sets_battery_wh?: number | null;
+  }[],
+) {
+  const done = mods
+    .filter((m) => m.status === "complete" && !m.deleted_at)
+    .map((m) => ({
+      m,
+      at: `${m.installed_on ?? (m.status_changed_at ?? "").slice(0, 10)}|${m.status_changed_at ?? ""}`,
+    }))
+    .sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
+    .map((x) => x.m);
+  const pick = (k: "sets_motor_w" | "sets_battery_v" | "sets_battery_wh") => {
+    const hit = done.find((m) => m[k] != null);
+    return hit ? Number(hit[k]) : null;
+  };
+  return {
+    mod_motor_w: pick("sets_motor_w"),
+    mod_battery_v: pick("sets_battery_v"),
+    mod_battery_wh: pick("sets_battery_wh"),
+  };
 }
 
 /** "Street legal" / "Off-road only", or null when the owner hasn't said. */

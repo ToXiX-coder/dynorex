@@ -17,6 +17,7 @@ import {
   buildSheetHtml,
   buildSheetText,
   carName,
+  identFor,
   listingAdText,
   nextPaperwork,
   recordDate,
@@ -137,14 +138,21 @@ export default function BuildRecordScreen() {
       {sold ? (
         <InlineNotice
           title="Sold"
-          body="You handed this car's record to the buyer. This is your read-only copy of what was logged until the sale."
+          body="You handed this record to the buyer. This is your read-only copy of what was logged until the sale."
         />
       ) : (
         <>
           {/* one lime action per screen: the buyer's link leads only when nothing needs paperwork first */}
-          <BuyerLink vehicleId={id} link={data.link} car={carName(rec.car)} onChange={load} primary={!next} />
+          <BuyerLink
+            vehicleId={id}
+            link={data.link}
+            car={carName(rec.car)}
+            kind={rec.car.kind ?? null}
+            onChange={load}
+            primary={!next}
+          />
           <ListingSheet record={rec} token={data.link?.token ?? null} />
-          <Transfer vehicleId={id} openUntil={data.transfer} onChange={load} />
+          <Transfer vehicleId={id} kind={rec.car.kind ?? null} openUntil={data.transfer} onChange={load} />
         </>
       )}
 
@@ -197,7 +205,9 @@ function NextUp({ vehicleId, e, onAdded }: { vehicleId: string; e: RecordEntry; 
   const dyno = e.type === "dyno";
   const uploads = usePhotoUploads(onAdded);
   const [error, setError] = useState<MappedError | null>(null);
-  const what = dyno ? `the dyno sheet for your ${recordDate(e.date)} run` : `the receipt for ${[e.brand, e.title].filter(Boolean).join(" ")}`;
+  const what = dyno
+    ? `the dyno sheet for your ${recordDate(e.date)} run`
+    : `the receipt for ${[e.brand, e.title].filter(Boolean).join(" ")}`;
   const add = async (src: "camera" | "library") => {
     setError(null);
     const r = await pickPhoto(src);
@@ -227,7 +237,12 @@ function NextUp({ vehicleId, e, onAdded }: { vehicleId: string; e: RecordEntry; 
           </View>
         )}
         {error ? <InlineError kind={error.key} /> : null}
-        <UploadList items={uploads.items} onRetry={uploads.retry} onCancel={uploads.cancel} onDismiss={uploads.dismiss} />
+        <UploadList
+          items={uploads.items}
+          onRetry={uploads.retry}
+          onCancel={uploads.cancel}
+          onDismiss={uploads.dismiss}
+        />
       </Card>
     </Appear>
   );
@@ -254,12 +269,14 @@ function BuyerLink({
   vehicleId,
   link,
   car,
+  kind,
   onChange,
   primary = true,
 }: {
   vehicleId: string;
   link: { token: string; expires_at: string } | null;
   car: string;
+  kind: string | null;
   onChange: () => void;
   primary?: boolean;
 }) {
@@ -279,9 +296,10 @@ function BuyerLink({
     <Card style={{ gap: space.sm }}>
       <Text variant="label">Buyer&apos;s link</Text>
       <Text variant="caption" muted>
-        Anyone with the link sees every entry, edit and shop confirmation, and can check the VIN on the car against
-        yours without seeing it. Never your name, VIN, costs, notes or photos. Works for 90 days. Making a link locks
-        the VIN.
+        {(() => {
+          const id = identFor(kind).name;
+          return `Anyone with the link sees every entry, edit and shop confirmation, and can check the ${id} on the ${nounOf(kind)} against yours without seeing it. Never your name, ${id}, costs, notes or photos. Works for 90 days. Making a link locks the ${id}.`;
+        })()}
       </Text>
       {link ? (
         <>
@@ -404,8 +422,8 @@ function ListingSheet({ record, token }: { record: BuildRecord; token: string | 
         ) : null}
       </View>
       <Text variant="caption" muted>
-        Short ad: Marketplace or Craigslist. Full sheet: auctions like Bring a Trailer. For-sale sheet: a PDF for the
-        car&apos;s window, with a QR code to the record.
+        Short ad: Marketplace or Craigslist. Full sheet: auctions like Bring a Trailer. For-sale sheet: a PDF to print
+        and show with it, with a QR code to the record.
       </Text>
       {error ? <InlineError kind={error.key} /> : null}
       {fallback ? (
@@ -417,8 +435,18 @@ function ListingSheet({ record, token }: { record: BuildRecord; token: string | 
   );
 }
 
-/** Handing the record to the buyer: a code shown once, plus the VIN off the car on their side. */
-function Transfer({ vehicleId, openUntil, onChange }: { vehicleId: string; openUntil: string | null; onChange: () => void }) {
+/** Handing the record to the buyer: a code shown once, plus the VIN (an e-moto's frame number) on their side. */
+function Transfer({
+  vehicleId,
+  kind,
+  openUntil,
+  onChange,
+}: {
+  vehicleId: string;
+  kind: string | null;
+  openUntil: string | null;
+  onChange: () => void;
+}) {
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<MappedError | null>(null);
@@ -427,7 +455,7 @@ function Transfer({ vehicleId, openUntil, onChange }: { vehicleId: string; openU
       <Text variant="label">Sold it? Hand over the record</Text>
       {code ? (
         <>
-          <Text>Give the buyer this code. They also need the VIN from the car. It works once, for 14 days.</Text>
+          <Text>{`Give the buyer this code. They also need the ${identFor(kind).name} off the ${nounOf(kind)}. It works once, for 14 days.`}</Text>
           {/* a departures board: each character clacks into place (the code is also selectable below) */}
           <SplitFlap
             text={code}
@@ -461,8 +489,7 @@ function Transfer({ vehicleId, openUntil, onChange }: { vehicleId: string; openU
       ) : (
         <>
           <Text variant="caption" muted>
-            The buyer gets this car in their garage with every entry, edit and shop confirmation, read-only. Your photos,
-            posts, costs and notes stay with you, and your copy becomes read-only. Needs the VIN on the car&apos;s record.
+            {`The buyer gets this ${nounOf(kind)} in their garage with every entry, edit and shop confirmation, read-only. Your photos, posts, costs and notes stay with you, and your copy becomes read-only. Needs the ${identFor(kind).name} on the ${nounOf(kind)}'s record.`}
           </Text>
           <Button
             title="Get a transfer code"
@@ -487,3 +514,6 @@ function Transfer({ vehicleId, openUntil, onChange }: { vehicleId: string; openU
     </Card>
   );
 }
+
+/** "car", "bike" or "e-moto" for the record's vehicle (D-74). */
+const nounOf = (kind: string | null) => (kind === "ebike" ? "e-moto" : kind === "motorcycle" ? "bike" : "car");

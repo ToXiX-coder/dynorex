@@ -148,7 +148,7 @@ function Chat() {
 
           {cars.length ? (
             <View style={{ gap: space.xs }}>
-              <Text variant="label">Your car</Text>
+              <Text variant="label">Your ride</Text>
               <View style={styles.chips}>
                 {cars.map((c) => (
                   <Chip
@@ -161,7 +161,7 @@ function Chat() {
               </View>
             </View>
           ) : (
-            <Text muted>Add a car to your garage so Torq knows what you drive.</Text>
+            <Text muted>Add a vehicle to your garage so Torq knows what you ride or drive.</Text>
           )}
 
           {car && insights ? <Snapshot insights={insights} /> : null}
@@ -170,7 +170,7 @@ function Chat() {
             <Bubble role="assistant">
               {car
                 ? `Yo! Let's talk ${car.year} ${car.make} ${car.model}. What are you after: power, handling, sound, or what to do first?`
-                : "Yo! Pick a car and tell me what you're after."}
+                : "Yo! Pick a ride and tell me what you're after."}
             </Bubble>
           ) : null}
           {messages.map((m, i) => (

@@ -30,6 +30,9 @@ const blankForm: ModFields = {
   installed_odometer: "",
   compliance: "",
   carb_eo: "",
+  sets_motor_kw: "",
+  sets_battery_v: "",
+  sets_battery_wh: "",
 };
 
 describe("dates", () => {

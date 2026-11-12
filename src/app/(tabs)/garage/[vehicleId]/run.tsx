@@ -19,6 +19,7 @@ import { config } from "@/services/config";
 import type { VehicleRow } from "@/services/supabase/database.types";
 import { themed } from "@/theme/themed";
 import { color, radius, space } from "@/theme/tokens";
+import { kindNoun, kindOf } from "@/domain/vehicleKind";
 
 const PHASE_TEXT = {
   idle: "",
@@ -47,10 +48,14 @@ export default function TimeRun() {
   }, [id]);
 
   const weight = vehicle?.baseline_weight_lb ? Number(vehicle.baseline_weight_lb) : null;
-  const result = useMemo(
-    () => (rec.phase === "done" ? analyzeRun(rec.samples, weight) : null),
-    [rec.phase, rec.samples, weight],
-  );
+  const kind = kindOf(vehicle);
+  const emoto = kind === "ebike";
+  const result = useMemo(() => {
+    const r = rec.phase === "done" ? analyzeRun(rec.samples, emoto ? null : weight) : null;
+    // D-74: an e-moto is timed 0-30; a car or motorcycle needs a 0-60 or a quarter
+    if (!r) return null;
+    return (emoto ? (r.zeroThirty ?? r.zeroSixty ?? r.quarter) : (r.zeroSixty ?? r.quarter)) === null ? null : r;
+  }, [rec.phase, rec.samples, weight, emoto]);
   // a buzz when the timer starts and when the run is done (no sound: eyes and ears stay on the road)
   useEffect(() => {
     if (rec.phase === "running" || rec.phase === "done") haptic.tap();
@@ -67,10 +72,11 @@ export default function TimeRun() {
       vehicle_id: id,
       ran_at: new Date().toISOString(),
       zero_sixty_s: result.zeroSixty,
+      zero_thirty_s: result.zeroThirty,
       quarter_s: result.quarter,
       trap_mph: result.quarter === null ? null : result.trapMph,
       est_whp: result.estWhp,
-      weight_lb: weight,
+      weight_lb: emoto ? null : weight,
       sample_hz: result.sampleHz,
       quality: result.quality,
       note: null,
@@ -104,7 +110,12 @@ export default function TimeRun() {
         ) : null}
         <Button title="Arm the timer" fullWidth disabled={!safe} onPress={() => void rec.arm()} />
         {config.demoMode ? (
-          <Button title="Play a sample run (pitch mode)" variant="secondary" fullWidth onPress={rec.simulate} />
+          <Button
+            title="Play a sample run (pitch mode)"
+            variant="secondary"
+            fullWidth
+            onPress={() => (emoto ? rec.simulate(Number(vehicle?.top_speed_mph ?? 50) + 2, 4) : rec.simulate())}
+          />
         ) : null}
       </Screen>
     );
@@ -133,33 +144,36 @@ export default function TimeRun() {
         ) : null}
       </View>
 
-      {rec.samples.length > 1 ? <SpeedTrace samples={result?.samples ?? rec.samples} /> : null}
+      {rec.samples.length > 1 ? <SpeedTrace samples={result?.samples ?? rec.samples} mark={emoto ? 30 : 60} /> : null}
 
       {rec.phase === "done" && !result ? (
         <InlineNotice
           headsUp
           title="No standing start found"
-          body="Timing needs a full stop first, then a launch to at least 60 mph. Nothing was saved."
+          body={`Timing needs a full stop first, then a launch to at least ${emoto ? 30 : 60} mph. Nothing was saved.`}
         />
       ) : null}
 
       {result ? (
         <Card style={{ gap: space.sm }}>
           <View style={styles.results}>
+            {emoto ? <Result label="0–30 mph" value={secs(result.zeroThirty)} /> : null}
             <Result label="0–60 mph" value={secs(result.zeroSixty)} />
             <Result
               label="¼ mile"
               value={result.quarter === null ? "–" : `${secs(result.quarter)}`}
               sub={result.trapMph ? `@ ${result.trapMph.toFixed(0)} mph` : undefined}
             />
-            <Result label="Est. power" value={result.estWhp === null ? "–" : `~${result.estWhp}`} sub="whp" />
+            {emoto ? null : (
+              <Result label="Est. power" value={result.estWhp === null ? "–" : `~${result.estWhp}`} sub="whp" />
+            )}
           </View>
           <Text variant="caption" muted>
             {QUALITY_TEXT[result.quality]}
           </Text>
-          {weight === null ? (
+          {weight === null && !emoto ? (
             <Text variant="caption" muted>
-              Add the car&apos;s weight on its edit screen to get a power estimate.
+              {`Add the ${kindNoun(kind)}'s weight on its edit screen to get a power estimate.`}
             </Text>
           ) : null}
           {vehicle?.visibility === "public" ? (

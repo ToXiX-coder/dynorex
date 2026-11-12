@@ -17,6 +17,8 @@ export type Quality = "good" | "fair" | "rough";
 
 export interface RunResult {
   zeroSixty: number | null;
+  /** D-74: 0-30 mph, the e-moto number */
+  zeroThirty: number | null;
   quarter: number | null;
   trapMph: number | null;
   estWhp: number | null;
@@ -124,6 +126,7 @@ export function analyzeRun(raw: readonly Sample[], curbWeightLb: number | null):
   // the first reading is at (or just before) rest; pin it to the launch moment
   samples[0] = [0, 0];
   const sixty = crossingMs(samples, 60);
+  const thirty = crossingMs(samples, 30);
   const dist = distances(samples);
   let quarter: number | null = null;
   let trap: number | null = null;
@@ -138,9 +141,11 @@ export function analyzeRun(raw: readonly Sample[], curbWeightLb: number | null):
   const { hz, quality } = qualityFor(samples);
   const round2 = (ms: number | null) => (ms === null ? null : Math.round(ms / 10) / 100);
   const zeroSixty = round2(sixty);
+  const zeroThirty = round2(thirty);
   const quarterS = round2(quarter);
-  if (zeroSixty === null && quarterS === null) return null;
+  if (zeroSixty === null && quarterS === null && zeroThirty === null) return null;
   return {
+    zeroThirty: zeroThirty !== null && zeroThirty >= 0.5 && zeroThirty <= 20 ? zeroThirty : null,
     zeroSixty: zeroSixty !== null && zeroSixty >= 1.5 && zeroSixty <= 30 ? zeroSixty : null,
     quarter: quarterS !== null && quarterS >= 6 && quarterS <= 40 ? quarterS : null,
     trapMph: quarterS !== null && trap !== null ? Math.round(trap * 10) / 10 : null,
@@ -181,6 +186,7 @@ export interface ModForImpact {
 export interface RunForImpact {
   ran_at: string;
   zero_sixty_s: number | null;
+  zero_thirty_s?: number | null;
   quarter_s: number | null;
   est_whp: number | null;
 }
@@ -200,12 +206,17 @@ export interface ModImpact {
  * Before and after each completed mod: the best 0-60 before it went on, and the best after it but before the next
  * mod, so each change gets its own window. Best, not average, because a phone run is noisy.
  */
-export function modImpact(mods: readonly ModForImpact[], runs: readonly RunForImpact[]): ModImpact[] {
+export function modImpact(
+  mods: readonly ModForImpact[],
+  runs: readonly RunForImpact[],
+  /** D-74: an e-moto compares its 0-30 */
+  key: "zero_sixty_s" | "zero_thirty_s" = "zero_sixty_s",
+): ModImpact[] {
   const done = mods
     .filter((m) => m.status === "complete" && m.installed_on)
     .sort((a, b) => a.installed_on!.localeCompare(b.installed_on!));
-  const timed = runs.filter((r) => r.zero_sixty_s !== null);
-  const best = (xs: RunForImpact[]) => (xs.length ? Math.min(...xs.map((r) => Number(r.zero_sixty_s))) : null);
+  const timed = runs.filter((r) => r[key] != null);
+  const best = (xs: RunForImpact[]) => (xs.length ? Math.min(...xs.map((r) => Number(r[key]))) : null);
   return done.map((m, i) => {
     const day = m.installed_on!;
     const next = done[i + 1]?.installed_on ?? "9999-12-31";

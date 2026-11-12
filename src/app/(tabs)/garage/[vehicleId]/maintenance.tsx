@@ -12,8 +12,15 @@ import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Text } from "@/components/Text";
 import { num } from "@/domain/calculators";
-import { latestPerJob, ODO_MAX, presetsFor, suggestNextDue } from "@/domain/maintenance";
-import { kindOf, type VehicleKind } from "@/domain/vehicleKind";
+import {
+  batteryReadingText,
+  isBatteryCheck,
+  latestPerJob,
+  ODO_MAX,
+  presetsFor,
+  suggestNextDue,
+} from "@/domain/maintenance";
+import { kindNoun, kindOf, type VehicleKind } from "@/domain/vehicleKind";
 import { parsePrice, priceText } from "@/domain/shop";
 import { dayText, localToday } from "@/domain/when";
 import { icsFileName, serviceIcs } from "@/domain/calendar";
@@ -66,7 +73,9 @@ export default function Maintenance() {
   const odo = vehicle && vehicle.odometer !== null && !km ? Number(vehicle.odometer) : null;
   // the latest record per job carries the reminder; older ones are history
   const due = upcomingJobs(records ?? [], odo);
-  const vehicleName = vehicle?.nickname || (vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : "your car");
+  const vehicleName =
+    vehicle?.nickname || (vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : "your vehicle");
+  const noun = kindNoun(kindOf(vehicle));
   // "Log again" sits on the newest record of each job only; older ones are history
   const newest = new Set(latestPerJob(records ?? []).map((r) => r.id));
   const again = (r: MaintenanceRecord) => {
@@ -79,10 +88,10 @@ export default function Maintenance() {
       <Text variant="caption" muted>
         {`Private to you.${
           km
-            ? " This car's odometer is in km, so reminders here go by date (mileage reminders use miles)."
+            ? ` This ${noun}'s odometer is in km, so reminders here go by date (mileage reminders use miles).`
             : odo !== null
-              ? ` Odometer on file: ${odo.toLocaleString()} mi (tap it on the car's page to update it).`
-              : " Add the odometer on the car's page to track mileage reminders."
+              ? ` Odometer on file: ${odo.toLocaleString()} mi (tap it on the ${noun}'s page to update it).`
+              : ` Add the odometer on the ${noun}'s page to track mileage reminders.`
         }`}
       </Text>
       {error ? <InlineError kind={error.key} onAction={load} /> : null}
@@ -141,6 +150,7 @@ export default function Maintenance() {
               <Text variant="caption" muted>
                 {`${new Date(`${r.done_on}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}${r.odometer !== null ? ` · ${r.odometer.toLocaleString()} mi` : ""}`}
               </Text>
+              {batteryReadingText(r) ? <Text variant="caption">{batteryReadingText(r)}</Text> : null}
               {r.notes ? <Text variant="caption">{r.notes}</Text> : null}
             </Card>
           </Pressable>
@@ -224,6 +234,10 @@ function RecordForm({
   const [nextOdo, setNextOdo] = useState(
     record?.next_due_odometer?.toString() ?? start?.next_due_odometer?.toString() ?? "",
   );
+  // D-74: an e-moto battery check carries two readings a buyer asks for first
+  const [cycles, setCycles] = useState(record?.battery_cycles?.toString() ?? "");
+  const [fullV, setFullV] = useState(record?.battery_full_v != null ? String(Number(record.battery_full_v)) : "");
+  const batteryCheck = isBatteryCheck(title, kind);
   const [remind, setRemind] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<MappedError | null>(null);
@@ -256,6 +270,11 @@ function RecordForm({
       else costMinor = p.minor;
     }
     if (nextOn && nextOn < doneOn) e.nextOn = "Should be after the date it was done";
+    const c = batteryCheck && cycles.trim() ? num(cycles) : null;
+    if (batteryCheck && cycles.trim() && (c === null || c < 0 || c > 20000 || !Number.isInteger(c)))
+      e.cycles = "Use a whole number, 0 to 20,000";
+    const v = batteryCheck && fullV.trim() ? num(fullV) : null;
+    if (batteryCheck && fullV.trim() && (v === null || v < 10 || v > 900)) e.fullV = "Use 10 to 900 volts";
     if (Object.keys(e).length) return setErrors(e);
     setErrors({});
     const input: MaintenanceInput = {
@@ -266,6 +285,8 @@ function RecordForm({
       notes: notes.trim() || null,
       next_due_on: nextOn || null,
       next_due_odometer: no === null ? null : Math.round(no),
+      battery_cycles: c,
+      battery_full_v: v === null ? null : Math.round(v * 10) / 10,
     };
     setBusy(true);
     const r = record
@@ -305,9 +326,11 @@ function RecordForm({
       </SectionHeader>
       {!record && !redo ? (
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
-          {presetsFor(kind).slice(0, 8).map((p) => (
-            <Chip key={p.title} label={p.title} selected={title === p.title} onPress={() => pick(p.title)} />
-          ))}
+          {presetsFor(kind)
+            .slice(0, 8)
+            .map((p) => (
+              <Chip key={p.title} label={p.title} selected={title === p.title} onPress={() => pick(p.title)} />
+            ))}
         </View>
       ) : null}
       <TextField
@@ -317,7 +340,7 @@ function RecordForm({
         onChangeText={setTitle}
         maxLength={80}
         error={errors.title}
-        placeholder="Oil change"
+        placeholder={kind === "ebike" ? "Chain clean and lube" : "Oil change"}
       />
       <DateField label="Done on" value={doneOn} onChange={setDoneOn} max={today()} />
       <TextField
@@ -327,6 +350,36 @@ function RecordForm({
         keyboardType="number-pad"
         error={errors.odo}
       />
+      {batteryCheck ? (
+        <View style={{ gap: space.xs }}>
+          <View style={{ flexDirection: "row", gap: space.sm }}>
+            <View style={{ flex: 1 }}>
+              <TextField
+                label="Charge cycles"
+                value={cycles}
+                onChangeText={setCycles}
+                keyboardType="number-pad"
+                maxLength={5}
+                error={errors.cycles}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextField
+                label="Volts at full charge"
+                value={fullV}
+                onChangeText={setFullV}
+                keyboardType="decimal-pad"
+                maxLength={5}
+                error={errors.fullV}
+              />
+            </View>
+          </View>
+          <Text variant="caption" muted>
+            Cycles from the BMS or charger app, volts from a meter or the dash right after a full charge. Goes on your
+            Build Record as your own reading; buyers ask about the battery first.
+          </Text>
+        </View>
+      ) : null}
       <TextField
         label="Cost in dollars (optional)"
         value={cost}

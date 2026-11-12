@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, Platform, StyleSheet, View } from "react-native";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { PitchBadge } from "@/components/feedback/PitchBadge";
+import { RobotsForPath } from "@/components/seo/PageMeta";
 import { BrandSplash } from "@/components/mascot/BrandSplash";
 import { TourCard } from "@/features/tour/Tour";
 import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
@@ -121,56 +122,59 @@ function IntroCover({ lifted, children }: { lifted: boolean; children: ReactNode
 /** The app's screens, in the person's theme (the intro above always uses the brand colours). */
 function AppStack({ gate }: { gate: ReturnType<typeof useAuth>["gate"] }) {
   return (
-    <Stack screenOptions={screenOptions}>
-      <Stack.Protected guard={gate === "welcome"}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack.Protected>
-      <Stack.Protected guard={gate === "verify"}>
-        <Stack.Screen name="verify-email" options={{ title: "Verify email" }} />
-      </Stack.Protected>
-      <Stack.Protected guard={gate === "username"}>
-        <Stack.Screen name="username" options={{ title: "Pick a username", headerBackVisible: false }} />
-      </Stack.Protected>
-      <Stack.Protected guard={gate === "onboarding"}>
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      </Stack.Protected>
-      <Stack.Protected guard={gate === "app"}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="add" options={{ presentation: "modal", animation: "slide_from_bottom", title: "Add" }} />
-        <Stack.Screen
-          name="plus"
-          options={{ presentation: "modal", animation: "slide_from_bottom", title: "Dynorex+" }}
-        />
-        <Stack.Screen name="torq" options={{ title: "Ask Torq" }} />
-        <Stack.Screen name="offers/[offerId]" options={{ title: "Offer chat" }} />
-        <Stack.Screen name="requests/[requestId]" options={{ title: "Request" }} />
-        <Stack.Screen name="chat/[type]/[roomId]" options={{ title: "Chat" }} />
-        <Stack.Screen name="saved" options={{ title: "Saved" }} />
-        <Stack.Screen name="wrapped" options={{ title: "Your year" }} />
-        <Stack.Screen name="drive/[eventId]" options={{ title: "Live drive" }} />
-      </Stack.Protected>
-      {/* Public pages: open to everyone, signed in or not. They read only public projections. */}
-      <Stack.Screen name="u/[username]" options={{ title: "Profile" }} />
-      <Stack.Screen name="build/[vehicleId]/index" options={{ title: "Build" }} />
-      <Stack.Screen name="build/[vehicleId]/mod/[modId]" options={{ title: "Mod" }} />
-      <Stack.Screen name="build/[vehicleId]/mods" options={{ headerShown: false }} />
-      <Stack.Screen name="v/[vehicleId]" options={{ headerShown: false }} />
-      <Stack.Screen name="route/[routeId]" options={{ title: "Route" }} />
-      <Stack.Screen name="events/[eventId]" options={{ title: "Event" }} />
-      <Stack.Screen name="clubs/[clubId]" options={{ title: "Club" }} />
-      <Stack.Screen name="posts/[postId]" options={{ title: "Post" }} />
-      <Stack.Screen name="listings/[listingId]" options={{ title: "Listing" }} />
-      <Stack.Screen name="business/[businessId]" options={{ title: "Shop" }} />
-      <Stack.Screen name="tools" options={{ title: "Tools" }} />
-      <Stack.Screen name="history/[token]" options={{ title: "Build Record" }} />
-      <Stack.Screen name="confirm/[token]" options={{ title: "Confirm a job" }} />
-      <Stack.Screen name="support" options={{ title: "Help" }} />
-      <Stack.Screen name="account-deletion" options={{ title: "Delete account" }} />
-      {/* Links from email and OAuth must open whatever the current gate is. */}
-      <Stack.Screen name="auth/callback" options={{ title: "Signing in", headerShown: false }} />
-      <Stack.Screen name="reset-password" options={{ title: "New password" }} />
-      <Stack.Screen name="+not-found" options={{ title: "Not found" }} />
-    </Stack>
+    <>
+      <RobotsForPath />
+      <Stack screenOptions={screenOptions}>
+        <Stack.Protected guard={gate === "welcome"}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={gate === "verify"}>
+          <Stack.Screen name="verify-email" options={{ title: "Verify email" }} />
+        </Stack.Protected>
+        <Stack.Protected guard={gate === "username"}>
+          <Stack.Screen name="username" options={{ title: "Pick a username", headerBackVisible: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={gate === "onboarding"}>
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={gate === "app"}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="add" options={{ presentation: "modal", animation: "slide_from_bottom", title: "Add" }} />
+          <Stack.Screen
+            name="plus"
+            options={{ presentation: "modal", animation: "slide_from_bottom", title: "Dynorex+" }}
+          />
+          <Stack.Screen name="torq" options={{ title: "Ask Torq" }} />
+          <Stack.Screen name="offers/[offerId]" options={{ title: "Offer chat" }} />
+          <Stack.Screen name="requests/[requestId]" options={{ title: "Request" }} />
+          <Stack.Screen name="chat/[type]/[roomId]" options={{ title: "Chat" }} />
+          <Stack.Screen name="saved" options={{ title: "Saved" }} />
+          <Stack.Screen name="wrapped" options={{ title: "Your year" }} />
+          <Stack.Screen name="drive/[eventId]" options={{ title: "Live drive" }} />
+        </Stack.Protected>
+        {/* Public pages: open to everyone, signed in or not. They read only public projections. */}
+        <Stack.Screen name="u/[username]" options={{ title: "Profile" }} />
+        <Stack.Screen name="build/[vehicleId]/index" options={{ title: "Build" }} />
+        <Stack.Screen name="build/[vehicleId]/mod/[modId]" options={{ title: "Mod" }} />
+        <Stack.Screen name="build/[vehicleId]/mods" options={{ headerShown: false }} />
+        <Stack.Screen name="v/[vehicleId]" options={{ headerShown: false }} />
+        <Stack.Screen name="route/[routeId]" options={{ title: "Route" }} />
+        <Stack.Screen name="events/[eventId]" options={{ title: "Event" }} />
+        <Stack.Screen name="clubs/[clubId]" options={{ title: "Club" }} />
+        <Stack.Screen name="posts/[postId]" options={{ title: "Post" }} />
+        <Stack.Screen name="listings/[listingId]" options={{ title: "Listing" }} />
+        <Stack.Screen name="business/[businessId]" options={{ title: "Shop" }} />
+        <Stack.Screen name="tools" options={{ title: "Tools" }} />
+        <Stack.Screen name="history/[token]" options={{ title: "Build Record" }} />
+        <Stack.Screen name="confirm/[token]" options={{ title: "Confirm a job" }} />
+        <Stack.Screen name="support" options={{ title: "Help" }} />
+        <Stack.Screen name="account-deletion" options={{ title: "Delete account" }} />
+        {/* Links from email and OAuth must open whatever the current gate is. */}
+        <Stack.Screen name="auth/callback" options={{ title: "Signing in", headerShown: false }} />
+        <Stack.Screen name="reset-password" options={{ title: "New password" }} />
+        <Stack.Screen name="+not-found" options={{ title: "Not found" }} />
+      </Stack>
+    </>
   );
 }
 

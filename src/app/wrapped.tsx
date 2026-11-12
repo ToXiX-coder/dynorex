@@ -178,7 +178,7 @@ export default function WrappedScreen() {
             {data.newestMod ? <Text style={styles.line} numberOfLines={1}>{`Latest: ${data.newestMod}`}</Text> : null}
           </View>
           <Text style={[styles.small, { marginTop: "auto" }]}>
-            {`Dynorex · counted from my own logs across ${data.cars} ${data.cars === 1 ? "car" : "cars"}`}
+            {`Dynorex · counted from my own logs across ${data.cars} ${data.cars === 1 ? "vehicle" : "vehicles"}`}
           </Text>
         </View>
       )}

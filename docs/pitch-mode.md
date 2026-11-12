@@ -20,7 +20,7 @@ Expo Go can show everything except in-app purchase sheets and push; pitch mode n
 ## What it is
 
 - No sign-in screen: the app opens as **@demo_driver** with two vehicles (a public "Weekend Warrior" WRX and a
-  private Miata), a followed-build feed, notifications, and six made-up other owners with public builds.
+  private Sur-Ron Ultra Bee e-moto, D-74), a followed-build feed, notifications, and six made-up other owners with public builds.
 - Every feature works on the sample data, using the same rules as the real server: free limits (the garage is
   already at 2 vehicles, so "Add" shows the Dynorex+ upsell), private builds disappear from public pages,
   blocking hides people everywhere, stickers need Dynorex+, and so on.

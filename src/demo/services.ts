@@ -31,6 +31,7 @@ import type {
 } from "@/services/supabase/database.types";
 import { DEMO_ME, seedDemo, type DemoState } from "./data";
 import { logRevision, recordGuard } from "./recordHooks";
+import { emotoCurrent } from "@/domain/vehicleKind";
 
 const PAGE = 20;
 let S: DemoState = seedDemo();
@@ -143,6 +144,10 @@ function toPublic(b: BuildRow): PublicBuild {
     ebike_class: v.ebike_class ?? null,
     battery_v: v.battery_v ?? null,
     street_legal: v.street_legal ?? null,
+    // D-74: same rule as the view (moderation-hidden mods don't count)
+    ...(v.kind === "ebike"
+      ? emotoCurrent(mods.filter((m) => !m.hidden_at))
+      : { mod_motor_w: null, mod_battery_v: null, mod_battery_wh: null }),
   };
 }
 const publicBuilds = () => S.builds.filter(isPublic).map(toPublic);
@@ -278,7 +283,8 @@ export const demoBuildService: BuildServiceApi = {
     run(() => {
       const dup = S.vehicles.find((v) => v.client_ref === clientRef && v.owner_id === DEMO_ME);
       if (dup) return dup.id;
-      if (!S.subscription.plus && S.vehicles.filter((v) => mine(v) && !v.sold_at).length >= 2) refuse("planLimitVehicles");
+      if (!S.subscription.plus && S.vehicles.filter((v) => mine(v) && !v.sold_at).length >= 2)
+        refuse("planLimitVehicles");
       const v: VehicleRow = {
         id: newId(),
         owner_id: DEMO_ME,
@@ -370,7 +376,8 @@ export const demoBuildService: BuildServiceApi = {
       if (dup) return dup.id;
       const guard = recordGuard(S, vehicleId, null);
       if (guard) refuse(guard);
-      if (!S.subscription.plus && liveMods(vehicleId).filter((m) => !m.inherited_at).length >= 20) refuse("planLimitMods");
+      if (!S.subscription.plus && liveMods(vehicleId).filter((m) => !m.inherited_at).length >= 20)
+        refuse("planLimitMods");
       const m = {
         id: newId(),
         owner_id: DEMO_ME,

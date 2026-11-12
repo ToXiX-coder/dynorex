@@ -366,7 +366,8 @@ function vehicle(
     hero_path: null,
     visibility: pub ? "public" : "private",
     client_ref: null,
-    created_at: daysAgo(150 - n),
+    // the low byte keeps every sample in the past (0x101 would have been 107 days ahead)
+    created_at: daysAgo(150 - (n & 0xff)),
     updated_at: daysAgo(5),
     deleted_at: null,
     hidden_at: null,
@@ -466,8 +467,17 @@ export function seedDemo(): DemoState {
     // the car being worked on right now (Ask Torq opens on it)
     updated_at: daysAgo(1),
   });
-  const miata = vehicle(0x102, DEMO_ME, 1999, "Mazda", "MX-5 Miata", "Project Zoom", false, [null, null, null, null], {
-    odometer: 143000,
+  // D-74: the demo driver's second ride is an e-moto (one car, one e-moto; the free plan still holds two)
+  const emoto = vehicle(0x102, DEMO_ME, 2025, "Sur-Ron", "Ultra Bee", "Night Shift", false, [null, null, 187, null], {
+    kind: "ebike",
+    motor_w: 12500,
+    battery_v: 74,
+    battery_wh: 4070,
+    range_mi: 62,
+    top_speed_mph: 56,
+    street_legal: true,
+    frame_serial: "UB25-00042",
+    odometer: 2140,
   });
   const evo = vehicle(0x111, apex.id, 2008, "Mitsubishi", "Lancer Evolution X", null, true, [291, 300, 3517, 4.9]);
   const gtr = vehicle(0x112, r33.id, 1996, "Nissan", "Skyline GT-R", null, true, [276, 271, 3390, 5.0]);
@@ -512,8 +522,8 @@ export function seedDemo(): DemoState {
     mod(0x304, wrx, "Coilovers", "suspension", "in_progress", 145000, d({}), 12, { brand: "SampleRide" }),
     mod(0x305, wrx, "Stage 2 tune", "electronics", "planned", 69900, d({ hp: 45, torque: 60 }), 4),
     mod(0x306, wrx, "Big brake kit", "safety", "planned", 210000, d({ weight: 6 }), 2),
-    mod(0x311, miata, "Roll bar", "safety", "complete", 45000, d({ weight: 25 }), 70),
-    mod(0x312, miata, "Bucket seats", "interior", "planned", 80000, d({ weight: -30 }), 20),
+    mod(0x311, emoto, "Warp 9 rear sprocket 58T", "drivetrain", "complete", 6500, d({}), 70),
+    mod(0x312, emoto, "EBMX X-9000 controller", "motor", "planned", 98000, d({ weight: 1 }), 20),
     mod(0x321, evo, "Front-mount intercooler", "engine", "complete", 95000, d({ hp: 20 }), 30),
     mod(0x322, evo, "Aero kit", "aero", "complete", 180000, d({ weight: 15 }), 8),
     mod(0x331, gtr, "Rebuilt RB26 top end", "engine", "complete", 450000, d({ hp: 60, torque: 40 }), 25),
@@ -607,12 +617,20 @@ export function seedDemo(): DemoState {
       build(0x21d, xp3, "Trail Bee", "Stock frame, everything else is getting the treatment. Trails on weekends."),
     ],
     mods: [
-      mod(0x381, mt07, "Slip-on exhaust", "exhaust", "complete", 69900, d({ hp: 2, weight: -6 }), 35, { brand: "SampleCan" }),
+      mod(0x381, mt07, "Slip-on exhaust", "exhaust", "complete", 69900, d({ hp: 2, weight: -6 }), 35, {
+        brand: "SampleCan",
+      }),
       mod(0x382, mt07, "Frame sliders", "safety", "complete", 14900, d({}), 30),
       mod(0x383, mt07, "Fork cartridges", "suspension", "in_progress", 89900, d({}), 6),
       mod(0x384, mt07, "Quickshifter", "controls", "planned", 39900, d({}), 2),
-      mod(0x385, xp3, "Controller upgrade", "motor", "complete", 89900, d({}), 40, { brand: "SampleVolt" }),
-      mod(0x386, xp3, "72V battery", "battery", "planned", 189900, d({ weight: 6 }), 5),
+      mod(0x385, xp3, "Controller upgrade", "motor", "complete", 89900, d({}), 40, {
+        brand: "SampleVolt",
+        sets_motor_w: 12000,
+      }),
+      mod(0x386, xp3, "72V battery", "battery", "planned", 189900, d({ weight: 6 }), 5, {
+        sets_battery_v: 72,
+        sets_battery_wh: 2880,
+      }),
       mod(0x387, xp3, "Fork upgrade", "suspension", "complete", 99900, d({ weight: -2 }), 22),
       mod(0x388, xp3, "Rear sprocket", "drivetrain", "complete", 7900, d({}), 30),
     ],
@@ -622,7 +640,7 @@ export function seedDemo(): DemoState {
   return {
     users: [me, apex, r33, trail, low, grand, civic],
     plusUsers: new Set([grand.id, apex.id]),
-    vehicles: [wrx, miata, evo, gtr, bronco, gti, camaro, si, ...wrxCommunity.map((x) => x.v), ...twoWheels.vehicles],
+    vehicles: [wrx, emoto, evo, gtr, bronco, gti, camaro, si, ...wrxCommunity.map((x) => x.v), ...twoWheels.vehicles],
     builds: [...builds, ...wrxCommunity.map((x) => x.b), ...twoWheels.builds],
     mods: [...mods, ...wrxCommunity.flatMap((x) => x.ms), ...twoWheels.mods],
     photos: [],
@@ -1046,7 +1064,13 @@ export function seedDemo(): DemoState {
       maint(0xf11, wrx.id, "Oil change", 95, 58200, 4900, { next_due_odometer: 63200, next_due_days: 85 }),
       maint(0xf12, wrx.id, "Brake fluid flush", 740, 41000, 12000, { next_due_days: -10 }),
       maint(0xf13, wrx.id, "Tire rotation", 95, 58200, null, { next_due_odometer: 64200 }),
-      maint(0xf14, miata.id, "Timing belt", 400, 138000, 64000, { next_due_odometer: 198000 }),
+      maint(0xf14, emoto.id, "Chain clean and lube", 12, 2100, null, { next_due_odometer: 2400 }),
+      // D-74: the sample battery check (the owner's readings: cycles from the BMS app, volts off a meter)
+      {
+        ...maint(0xf17, emoto.id, "Battery balance and health check", 30, 1980, null, { next_due_days: 150 }),
+        battery_cycles: 86,
+        battery_full_v: 84.1,
+      },
       // D-64: the earlier owner's clutch job (read-only), and an alignment that was logged and later removed
       {
         ...maint(0xf15, wrx.id, "Clutch replacement", 950, 32000, null, {}),

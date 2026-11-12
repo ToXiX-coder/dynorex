@@ -41,11 +41,9 @@ export function RecallsCard({ vehicleId, car }: { vehicleId: string; car: string
     <Card style={{ gap: space.sm }}>
       <SectionHeader>Recalls</SectionHeader>
       <Text variant="caption" muted>
-        {`US safety recalls for the ${car}, from NHTSA by make, model and year (never your VIN), checked daily. A match may not mean your car is affected: a dealer can check with your VIN, and recall repairs are free.`}
+        {`US safety recalls for the ${car}, from NHTSA by make, model and year (never your VIN), checked daily. A match may not mean yours is affected: a dealer can check with your VIN, and recall repairs are free.`}
       </Text>
-      {open.length === 0 ? (
-        <Text>{recalls.length ? "Nothing open." : "No recalls found for this car."}</Text>
-      ) : null}
+      {open.length === 0 ? <Text>{recalls.length ? "Nothing open." : "No recalls found."}</Text> : null}
       {shown.map((r) => (
         <View
           key={r.campaign}
@@ -69,7 +67,7 @@ export function RecallsCard({ vehicleId, car }: { vehicleId: string; car: string
           {r.remedy ? <Text variant="caption">{`Fix: ${r.remedy}`}</Text> : null}
           <View style={{ flexDirection: "row" }}>
             <Button
-              title={r.dismissed ? "Show as open" : "Dealt with / not my car"}
+              title={r.dismissed ? "Show as open" : "Dealt with / doesn't apply"}
               variant="secondary"
               onPress={async () => {
                 const res = await proofService.setRecallDismissed(vehicleId, r.campaign, !r.dismissed);

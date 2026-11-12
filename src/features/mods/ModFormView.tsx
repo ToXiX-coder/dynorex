@@ -15,7 +15,7 @@ import { Text } from "@/components/Text";
 import type { ErrorKey } from "@/domain/copy/errors";
 import { CURRENCIES, minorDigits, type Currency } from "@/domain/money";
 import { SPEC_UNITS, type SpecDeltas, type SpecField } from "@/domain/specs";
-import { kindSpecFields, type VehicleKind } from "@/domain/vehicleKind";
+import { kindNoun, kindSpecFields, type VehicleKind } from "@/domain/vehicleKind";
 import {
   buildSpecDeltas,
   fieldErrors,
@@ -45,7 +45,10 @@ export type ModFields = Record<
   | "installed_by"
   | "installed_odometer"
   | "compliance"
-  | "carb_eo",
+  | "carb_eo"
+  | "sets_motor_kw"
+  | "sets_battery_v"
+  | "sets_battery_wh",
   string
 >;
 export interface PendingPhoto {
@@ -83,6 +86,9 @@ export function fieldsFromMod(m: ModRow | null | undefined): ModFields {
     installed_odometer: m?.installed_odometer == null ? "" : String(m.installed_odometer),
     compliance: m?.compliance ?? "",
     carb_eo: m?.carb_eo ?? "",
+    sets_motor_kw: m?.sets_motor_w == null ? "" : String(Number(m.sets_motor_w) / 1000),
+    sets_battery_v: m?.sets_battery_v == null ? "" : String(m.sets_battery_v),
+    sets_battery_wh: m?.sets_battery_wh == null ? "" : String(m.sets_battery_wh),
   };
 }
 
@@ -288,7 +294,7 @@ export function ModFormView({
             onChangeText={set("installed_odometer")}
             keyboardType="number-pad"
             maxLength={9}
-            hint="Goes on your Build Record, so a buyer sees when in the car's life it went on."
+            hint={`Goes on your Build Record, so a buyer sees when in the ${kindNoun(kind)}'s life it went on.`}
             error={errors.installed_odometer}
           />
           <TextField
@@ -369,6 +375,50 @@ export function ModFormView({
             </Text>
           ) : null}
         </View>
+        {/* D-74: an e-moto controller or battery replaces the numbers instead of adding to them */}
+        {kind === "ebike" && (fields.category === "motor" || fields.category === "battery") ? (
+          <View style={styles.section}>
+            <Text variant="label">After this mod (optional)</Text>
+            <Text variant="caption" muted>
+              {fields.category === "motor"
+                ? "The peak power it makes now. Once the mod is Complete, the e-moto's numbers show it, with stock kept beside it."
+                : "The pack it runs now. Once the mod is Complete, the e-moto's numbers show it, with stock kept beside it."}
+            </Text>
+            {fields.category === "motor" ? (
+              <TextField
+                label="Peak power (kW)"
+                value={fields.sets_motor_kw}
+                onChangeText={set("sets_motor_kw")}
+                keyboardType="decimal-pad"
+                maxLength={6}
+                error={errors.sets_motor_kw}
+              />
+            ) : (
+              <View style={styles.deltaRow}>
+                <View style={{ flex: 1 }}>
+                  <TextField
+                    label="Battery (V)"
+                    value={fields.sets_battery_v}
+                    onChangeText={set("sets_battery_v")}
+                    keyboardType="number-pad"
+                    maxLength={3}
+                    error={errors.sets_battery_v}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <TextField
+                    label="Battery (Wh)"
+                    value={fields.sets_battery_wh}
+                    onChangeText={set("sets_battery_wh")}
+                    keyboardType="number-pad"
+                    maxLength={5}
+                    error={errors.sets_battery_wh}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+        ) : null}
         {/* 7. spec deltas */}
         <View style={styles.section}>
           <Text variant="label">Spec changes (optional)</Text>

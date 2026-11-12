@@ -38,7 +38,6 @@ export const MOTORCYCLE_PRESETS: typeof MAINTENANCE_PRESETS = [
   { title: "Battery", miles: null, months: null },
 ];
 
-
 /** D-73: e-moto jobs (light electric motorcycles). Off-road hours are hard on bearings and chains. */
 export const EBIKE_PRESETS: typeof MAINTENANCE_PRESETS = [
   { title: "Chain clean and lube", miles: 200, months: null },
@@ -128,7 +127,9 @@ export function suggestNextDue(
 }
 
 /** The newest record of each job (same title, any case); older ones are history (D-68: "Log again" sits there). */
-export function latestPerJob<T extends { title: string; done_on: string; created_at: string }>(records: readonly T[]): T[] {
+export function latestPerJob<T extends { title: string; done_on: string; created_at: string }>(
+  records: readonly T[],
+): T[] {
   const seen = new Set<string>();
   return [...records]
     .sort((a, b) => b.done_on.localeCompare(a.done_on) || b.created_at.localeCompare(a.created_at))
@@ -145,4 +146,20 @@ export function byUrgency(a: Due, b: Due): number {
   const rank = { overdue: 0, soon: 1, ok: 2, none: 3 } as const;
   const left = (d: Due) => Math.min(d.days ?? Infinity, d.miles !== null ? d.miles / 40 : Infinity);
   return rank[a.state] - rank[b.state] || left(a) - left(b);
+}
+
+/** D-74: an e-moto job that's a battery check, so the form asks for its readings. */
+export const isBatteryCheck = (title: string, kind: VehicleKind) => kind === "ebike" && /batter/i.test(title);
+
+/** "312 cycles · 83.4 V at full charge", or null when neither reading is there. */
+export function batteryReadingText(r: { battery_cycles?: number | null; battery_full_v?: number | string | null }) {
+  const parts = [
+    r.battery_cycles != null
+      ? `${Number(r.battery_cycles).toLocaleString()} ${Number(r.battery_cycles) === 1 ? "cycle" : "cycles"}`
+      : null,
+    r.battery_full_v != null
+      ? `${Number(r.battery_full_v).toLocaleString(undefined, { maximumFractionDigits: 1 })} V at full charge`
+      : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
 }

@@ -60,59 +60,61 @@ const optNumber = (label: string, min: number, max: number, opts: { int?: boolea
       .nullable(),
   );
 
-export const vehicleFormSchema = z.object({
-  year: z.preprocess(
-    (v) => Number(v),
-    z
-      .number({ error: "Enter the year" })
-      .int("Enter a 4-digit year")
-      .refine((y) => y >= 1886 && y <= MAX_YEAR(), `Year: 1886–${MAX_YEAR()}`),
-  ),
-  make: z.string().trim().min(1, "Enter the make").max(50, "Make: 50 characters max"),
-  model: z.string().trim().min(1, "Enter the model").max(50, "Model: 50 characters max"),
-  trim_level: optText(50, "Trim"),
-  nickname: optText(60, "Build name"),
-  vin: z.preprocess(
-    (v) => (typeof v === "string" ? (v.trim() === "" ? null : v.trim().toUpperCase()) : v),
-    z
-      .string()
-      .regex(/^[A-HJ-NPR-Z0-9]{17}$/, "A VIN is 17 letters and numbers, without I, O or Q")
-      .nullable(),
-  ),
-  odometer: optNumber("Odometer", 0, 2_000_000, { int: true }),
-  odometer_unit: z.enum(["mi", "km"]),
-  description: optText(2000, "Notes"),
-  baseline_hp: optNumber("Horsepower", 0, 5000, { exclusive: true }),
-  baseline_torque_lbft: optNumber("Torque", 0, 5000, { exclusive: true }),
-  // an e-bike can weigh as little as 10 lb; the 100 lb floor for everything else is checked below (D-71)
-  baseline_weight_lb: optNumber("Weight", 10, 20000, { exclusive: true }),
-  baseline_zero_to_sixty_s: optNumber("0–60", 0, 60, { exclusive: true }),
-  visibility: z.enum(["private", "public"]),
-  // D-71: what it is (cars when left out, as every vehicle was before), plus the e-bike's own stock numbers
-  kind: z.enum(["car", "motorcycle", "ebike"]).default("car"),
-  motor_w: optNumber("Peak power", 1, 100000, { int: true }).optional(),
-  // D-73: e-moto pack voltage and road use
-  battery_v: optNumber("Battery voltage", 12, 800, { int: true }).optional(),
-  street_legal: z.boolean().nullable().optional(),
-  battery_wh: optNumber("Battery", 1, 10000, { int: true }).optional(),
-  range_mi: optNumber("Range", 0, 500, { exclusive: true }).optional(),
-  top_speed_mph: optNumber("Top speed", 0, 300, { exclusive: true }).optional(),
-  // D-72: a motorcycle's engine size, an e-bike's class and its private frame serial
-  engine_cc: optNumber("Engine size", 20, 10000, { int: true }).optional(),
-  ebike_class: optNumber("Class", 1, 3, { int: true }).optional(),
-  frame_serial: z
-    .preprocess(
+export const vehicleFormSchema = z
+  .object({
+    year: z.preprocess(
+      (v) => Number(v),
+      z
+        .number({ error: "Enter the year" })
+        .int("Enter a 4-digit year")
+        .refine((y) => y >= 1886 && y <= MAX_YEAR(), `Year: 1886–${MAX_YEAR()}`),
+    ),
+    make: z.string().trim().min(1, "Enter the make").max(50, "Make: 50 characters max"),
+    model: z.string().trim().min(1, "Enter the model").max(50, "Model: 50 characters max"),
+    trim_level: optText(50, "Trim"),
+    nickname: optText(60, "Build name"),
+    vin: z.preprocess(
       (v) => (typeof v === "string" ? (v.trim() === "" ? null : v.trim().toUpperCase()) : v),
       z
         .string()
-        .regex(/^[A-Z0-9-]{3,40}$/, "Frame serial: 3–40 letters, numbers or dashes")
+        .regex(/^[A-HJ-NPR-Z0-9]{17}$/, "A VIN is 17 letters and numbers, without I, O or Q")
         .nullable(),
-    )
-    .optional(),
-}).superRefine((v, ctx) => {
-  if (v.kind !== "ebike" && v.baseline_weight_lb !== null && v.baseline_weight_lb <= 100)
-    ctx.addIssue({ code: "custom", path: ["baseline_weight_lb"], message: "Weight: 100–20000" });
-});
+    ),
+    odometer: optNumber("Odometer", 0, 2_000_000, { int: true }),
+    odometer_unit: z.enum(["mi", "km"]),
+    description: optText(2000, "Notes"),
+    baseline_hp: optNumber("Horsepower", 0, 5000, { exclusive: true }),
+    baseline_torque_lbft: optNumber("Torque", 0, 5000, { exclusive: true }),
+    // an e-bike can weigh as little as 10 lb; the 100 lb floor for everything else is checked below (D-71)
+    baseline_weight_lb: optNumber("Weight", 10, 20000, { exclusive: true }),
+    baseline_zero_to_sixty_s: optNumber("0–60", 0, 60, { exclusive: true }),
+    visibility: z.enum(["private", "public"]),
+    // D-71: what it is (cars when left out, as every vehicle was before), plus the e-bike's own stock numbers
+    kind: z.enum(["car", "motorcycle", "ebike"]).default("car"),
+    motor_w: optNumber("Peak power", 1, 100000, { int: true }).optional(),
+    // D-73: e-moto pack voltage and road use
+    battery_v: optNumber("Battery voltage", 12, 800, { int: true }).optional(),
+    street_legal: z.boolean().nullable().optional(),
+    battery_wh: optNumber("Battery", 1, 10000, { int: true }).optional(),
+    range_mi: optNumber("Range", 0, 500, { exclusive: true }).optional(),
+    top_speed_mph: optNumber("Top speed", 0, 300, { exclusive: true }).optional(),
+    // D-72: a motorcycle's engine size, an e-bike's class and its private frame serial
+    engine_cc: optNumber("Engine size", 20, 10000, { int: true }).optional(),
+    ebike_class: optNumber("Class", 1, 3, { int: true }).optional(),
+    frame_serial: z
+      .preprocess(
+        (v) => (typeof v === "string" ? (v.trim() === "" ? null : v.trim().toUpperCase()) : v),
+        z
+          .string()
+          .regex(/^[A-Z0-9-]{3,40}$/, "Frame serial: 3–40 letters, numbers or dashes")
+          .nullable(),
+      )
+      .optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.kind !== "ebike" && v.baseline_weight_lb !== null && v.baseline_weight_lb <= 100)
+      ctx.addIssue({ code: "custom", path: ["baseline_weight_lb"], message: "Weight: 100–20000" });
+  });
 export type VehicleForm = z.infer<typeof vehicleFormSchema>;
 
 /**
@@ -181,11 +183,17 @@ export const modFormSchema = z
       )
       .optional(),
     // D-64: emissions status for engine / exhaust / electronics parts, and a CARB EO number when it has one
-    compliance: z.preprocess(
-      blankToNull,
-      z.enum(["not_emissions_related", "carb_eo", "off_road_only", "stock", "unknown"]).nullable(),
-    ).optional(),
+    compliance: z
+      .preprocess(
+        blankToNull,
+        z.enum(["not_emissions_related", "carb_eo", "off_road_only", "stock", "unknown"]).nullable(),
+      )
+      .optional(),
     carb_eo: optText(20, "CARB EO number").optional(),
+    // D-74: an e-moto controller or battery replaces the numbers (kW in the form, watts in the database)
+    sets_motor_kw: optNumber("Peak power after this mod", 0.1, 100).optional(),
+    sets_battery_v: optNumber("Pack voltage", 12, 800, { int: true }).optional(),
+    sets_battery_wh: optNumber("Pack capacity", 50, 50000, { int: true }).optional(),
     cost: z.string(),
     currency: z.enum(CURRENCIES),
     status: z.enum(["planned", "in_progress", "complete"], { error: "Pick a status" }),
@@ -213,9 +221,15 @@ export const modFormSchema = z
       ctx.addIssue({ code: "custom", path: ["carb_eo"], message: "CARB EO numbers look like D-142-44" });
       return z.NEVER;
     }
-    const { cost: _cost, ...rest } = v;
+    const { cost: _cost, sets_motor_kw, sets_battery_v, sets_battery_wh, ...rest } = v;
+    // only a motor mod sets power, only a battery mod sets the pack (other categories never carry them)
+    const motor = v.category === "motor";
+    const battery = v.category === "battery";
     return {
       ...rest,
+      sets_motor_w: motor && sets_motor_kw != null ? Math.round(sets_motor_kw * 1000) : null,
+      sets_battery_v: battery ? (sets_battery_v ?? null) : null,
+      sets_battery_wh: battery ? (sets_battery_wh ?? null) : null,
       compliance,
       carb_eo: compliance === "carb_eo" ? eo : null,
       cost_minor: minor,

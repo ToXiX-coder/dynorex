@@ -15,7 +15,7 @@ export default function StepPhoto() {
   const next = useAction(() => profileService.setOnboardingStep(2));
   return (
     <OnboardingFrame step={2} torq="success">
-      <Text>Add a hero photo of your car so your build looks the part.</Text>
+      <Text>Add a hero photo of your ride so your build looks the part.</Text>
       <PhaseNotice phase={3}>
         Photo uploads arrive with the garage update. You&apos;ll be able to add one from your vehicle page.
       </PhaseNotice>

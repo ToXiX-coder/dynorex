@@ -69,20 +69,29 @@ export function usePerfRecorder() {
   }, [push, stopAll]);
 
   /** Pitch mode: plays a sample 10 Hz pull in real time, so the whole flow can be shown parked. */
-  const simulate = useCallback(() => {
-    stopAll();
-    const run = simulatedRun();
-    buf.current = [];
-    setSamples([]);
-    setPhase("waiting");
-    const start = Date.now();
-    let i = 0;
-    timer.current = setInterval(() => {
-      const elapsed = Date.now() - start;
-      while (i < run.length && run[i]![0] <= elapsed) push(run[i++]!);
-      if (i >= run.length) stopAll();
-    }, 50);
-  }, [push, stopAll]);
+  // an e-moto's sample (D-74) tops out near its own top speed and pulls harder off the line
+  const simulate = useCallback(
+    (vmax?: number, tau?: number) => {
+      stopAll();
+      const run = simulatedRun(10, vmax, tau);
+      buf.current = [];
+      setSamples([]);
+      setPhase("waiting");
+      const start = Date.now();
+      let i = 0;
+      timer.current = setInterval(() => {
+        const elapsed = Date.now() - start;
+        while (i < run.length && run[i]![0] <= elapsed) push(run[i++]!);
+        if (i >= run.length) {
+          // the rider lets off: a run that never reached the quarter mile (an e-moto's sample) still finishes
+          const last = run[run.length - 1]!;
+          push([last[0] + 600, Math.round(last[1] * 0.4)]);
+          stopAll();
+        }
+      }, 50);
+    },
+    [push, stopAll],
+  );
 
   const reset = useCallback(() => {
     stopAll();

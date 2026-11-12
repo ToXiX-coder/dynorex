@@ -39,6 +39,8 @@ import { haptic } from "@/services/haptics";
 import { ScreenMenu } from "@/components/feedback/ScreenMenu";
 import { themed } from "@/theme/themed";
 import { backOr } from "@/components/navigation/stackOptions";
+import { PageMeta } from "@/components/seo/PageMeta";
+import { metaDescription } from "@/domain/seo";
 
 /**
  * dynorex.app/events/:eventId. Anyone can see a public event. RSVP respects capacity on the server.
@@ -122,6 +124,13 @@ export default function EventScreen() {
 
   return (
     <Screen onRefresh={() => setReload((n) => n + 1)}>
+      <PageMeta
+        title={ev.title}
+        description={metaDescription(
+          `${formatEventTime(ev.starts_at, ev.ends_at)} at ${ev.location_text}.`,
+          ev.description,
+        )}
+      />
       <ScreenMenu
         title={ev.title}
         label="Event options"

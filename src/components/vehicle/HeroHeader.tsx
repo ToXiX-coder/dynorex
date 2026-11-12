@@ -61,6 +61,8 @@ export function heroStatsFrom(e: EstimateLike): HeroStat[] {
 /** D-71: an e-moto's headline numbers are its peak power, range and top speed, exact (they're the owner's). */
 export function ebikeHeroStats(b: {
   motor_w?: number | string | null;
+  /** D-74: a controller mod's peak power wins over stock */
+  mod_motor_w?: number | null;
   range_mi?: number | string | null;
   top_speed_mph?: number | string | null;
 }): HeroStat[] {
@@ -71,7 +73,8 @@ export function ebikeHeroStats(b: {
     out.push({ low: x, high: x, decimals, unit, label });
   };
   // D-73: e-motos are quoted in peak kW ("12.5 kW")
-  const kw = b.motor_w ? Number(b.motor_w) / 1000 : null;
+  const watts = b.mod_motor_w ?? b.motor_w;
+  const kw = watts ? Number(watts) / 1000 : null;
   add(kw, "kW", "Peak power", kw !== null && kw % 1 ? 1 : 0);
   add(b.range_mi, "mi", "Range");
   add(b.top_speed_mph, "mph", "Top speed");

@@ -183,6 +183,10 @@ export type EbikeNumbers = {
   /** D-73 */
   battery_v?: number | null;
   street_legal?: boolean | null;
+  /** D-74: what its newest complete mods set (null: stock) */
+  mod_motor_w?: number | null;
+  mod_battery_v?: number | null;
+  mod_battery_wh?: number | null;
 };
 
 /** An e-bike stock number: the owner's figure, exact, in the same tile as the car specs. */
@@ -203,7 +207,9 @@ function StockTile({
     <View
       style={styles.tile}
       accessible
-      accessibilityLabel={value === null ? `${label}: not set` : `${label}: ${value.toFixed(decimals)} ${unit}, ${note}`}
+      accessibilityLabel={
+        value === null ? `${label}: not set` : `${label}: ${value.toFixed(decimals)} ${unit}, ${note}`
+      }
     >
       <Text style={styles.label}>{label}</Text>
       <View style={styles.valueRow}>
@@ -228,8 +234,9 @@ function StockTile({
 }
 
 /**
- * D-71: an e-bike's numbers. Motor, battery, range and top speed are the owner's stock figures (mods don't change
- * them here); weight is the same estimate as a car's, so a lighter wheelset still counts.
+ * D-71: an e-bike's numbers. Range and top speed are the owner's stock figures; weight is the same estimate as a
+ * car's, so a lighter wheelset still counts. D-74: a controller or battery mod replaces peak power and the pack,
+ * shown "with mods" and the stock figure beside it.
  */
 export function EbikeSpecCard({
   bike,
@@ -242,6 +249,12 @@ export function EbikeSpecCard({
   const e = estimate;
   const wh = n(bike.battery_wh);
   const kw = n(bike.motor_w) === null ? null : n(bike.motor_w)! / 1000;
+  const modKw = n(bike.mod_motor_w) === null ? null : n(bike.mod_motor_w)! / 1000;
+  const modWh = n(bike.mod_battery_wh);
+  const volts = bike.mod_battery_v ?? bike.battery_v;
+  const packModded = bike.mod_battery_v != null || modWh !== null;
+  const stockText = (x: number | null, unit: string) =>
+    x === null ? "With mods" : `With mods · stock ${x.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${unit}`;
   const range = n(bike.range_mi);
   return (
     <View style={{ gap: space.sm }}>
@@ -252,12 +265,24 @@ export function EbikeSpecCard({
       ) : null}
       <View style={styles.grid}>
         {/* e-moto makers quote peak power in kW */}
-        <StockTile label="Peak power" value={kw} unit="kW" decimals={1} />
+        <StockTile
+          label="Peak power"
+          value={modKw ?? kw}
+          unit="kW"
+          decimals={1}
+          note={modKw === null ? "Stock" : stockText(kw, "kW")}
+        />
         <StockTile
           label="Battery"
-          value={wh}
+          value={modWh ?? wh}
           unit="Wh"
-          note={bike.battery_v ? `${bike.battery_v}V pack` : "Stock"}
+          note={
+            packModded
+              ? `${volts ? `${volts}V pack · ` : ""}${modWh === null ? "with mods" : stockText(wh, "Wh").toLowerCase()}`
+              : volts
+                ? `${volts}V pack`
+                : "Stock"
+          }
         />
         <StockTile label="Range" value={range} unit="mi" />
         <StockTile label="Top speed" value={n(bike.top_speed_mph)} unit="mph" />
@@ -278,8 +303,9 @@ export function EbikeSpecCard({
         />
       </View>
       <Text variant="caption" muted>
-        Stock numbers, as the owner entered them or from the maker. Real range depends on the power mode, rider,
-        terrain and weather.
+        {packModded || modKw !== null
+          ? 'Stock numbers as the owner entered them or from the maker; "with mods" is what the owner says the latest parts make. Range is stock. Real range depends on the power mode, rider, terrain and weather.'
+          : "Stock numbers, as the owner entered them or from the maker. Real range depends on the power mode, rider, terrain and weather."}
       </Text>
     </View>
   );

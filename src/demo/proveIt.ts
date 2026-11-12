@@ -22,9 +22,11 @@ export const demoPerfService: PerfServiceApi = {
       if (!myVehicle(input.vehicle_id)) return K.refuse("buildNotFound");
       // the same checks as the table
       const ok =
-        (input.zero_sixty_s !== null || input.quarter_s !== null) &&
+        (input.zero_sixty_s !== null || input.quarter_s !== null || input.zero_thirty_s != null) &&
         (input.quarter_s === null) === (input.trap_mph === null) &&
         between(input.zero_sixty_s, 1.5, 30) &&
+        between(input.zero_thirty_s ?? null, 0.5, 20) &&
+        between(input.weight_lb, 100, 12000) &&
         between(input.quarter_s, 6, 40) &&
         between(input.est_whp, 20, 3000);
       if (!ok) K.refuse("saveFailed");
@@ -54,6 +56,7 @@ export const demoPerfService: PerfServiceApi = {
               vehicle_id: r.vehicle_id,
               ran_at: r.ran_at,
               zero_sixty_s: r.zero_sixty_s,
+              zero_thirty_s: r.zero_thirty_s ?? null,
               quarter_s: r.quarter_s,
               trap_mph: r.trap_mph,
               est_whp: r.est_whp,

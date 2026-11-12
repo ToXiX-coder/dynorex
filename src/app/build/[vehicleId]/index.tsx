@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { CategoryIcon, StatusChip, categoryLabel } from "@/components/build/BuildBits";
 import { EbikeSpecCard, SpecCard } from "@/components/build/SpecCard";
-import { kindDetail, kindOf, timesZeroToSixty } from "@/domain/vehicleKind";
+import { kindDetail, kindOf } from "@/domain/vehicleKind";
 import { Button } from "@/components/buttons/Button";
 import { Card } from "@/components/cards/Card";
 import { GetAppBanner } from "@/components/feedback/GetAppBanner";
@@ -38,6 +38,8 @@ import { honkLine } from "@/domain/easterEggs";
 import { PowerGauge } from "@/components/vehicle/PowerGauge";
 import { isStock } from "@/domain/specRange";
 import { dayText } from "@/domain/when";
+import { PageMeta } from "@/components/seo/PageMeta";
+import { buildTitle, metaDescription } from "@/domain/seo";
 import { themed } from "@/theme/themed";
 
 type Loaded = Extract<PublicBuildPage, { status: "public" }>;
@@ -109,162 +111,176 @@ export default function PublicBuildScreen() {
   const car = `${b.year} ${b.make} ${b.model}${b.trim_level ? ` ${b.trim_level}` : ""}`;
   const isMine = Boolean(profile?.username && profile.username === b.owner_username);
   const mods = [...loaded.mods, ...more];
+  const detail = kindDetail(b);
 
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      style={{ backgroundColor: color.background }}
-      contentContainerStyle={{ paddingBottom: space.huge }}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          tintColor={color.accent}
-          onRefresh={async () => {
-            setRefreshing(true);
-            await load();
-            setRefreshing(false);
+    <>
+      <PageMeta
+        title={buildTitle({ nickname: b.title, year: b.year, make: b.make, model: b.model, mods: b.mods_count })}
+        description={metaDescription(
+          `${car}${detail ? ` (${detail})` : ""} by @${b.owner_username} on Dynorex.`,
+          b.description,
+        )}
+      />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{ backgroundColor: color.background }}
+        contentContainerStyle={{ paddingBottom: space.huge }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            tintColor={color.accent}
+            onRefresh={async () => {
+              setRefreshing(true);
+              await load();
+              setRefreshing(false);
+            }}
+          />
+        }
+      >
+        <ScreenMenu
+          title={b.title}
+          label="Build options"
+          actions={
+            !isMine && status === "signedIn" && !blocked
+              ? [
+                  {
+                    label: "Report this build",
+                    hint: "Tell Dynorex about a problem.",
+                    onPress: () => setReporting(true),
+                  },
+                  {
+                    label: `Block @${b.owner_username}`,
+                    hint: "Neither of you can see or follow the other.",
+                    destructive: true,
+                    onPress: () => setConfirmBlock(true),
+                  },
+                ]
+              : []
+          }
+        />
+        <HeroHeader
+          media={(style, artInset) => (
+            <PublicImage
+              uri={media.heroes[id]}
+              expected={b.has_hero}
+              alt={`Photo of ${car}`}
+              art={{
+                make: b.make,
+                model: b.model,
+                year: b.year,
+                seed: id,
+                hint: b.title,
+                inset: artInset,
+                animate: true,
+                kind: kindOf(b),
+              }}
+              style={style}
+            />
+          )}
+          title={b.title}
+          subtitle={[car, kindDetail(b)].filter(Boolean).join(" · ")}
+          stats={kindOf(b) === "ebike" ? ebikeHeroStats(b) : heroStatsFrom(loaded.specs)}
+          honk={(tap) => honkLine(b.make, b.model, b.year, tap)}
+        />
+        <View style={styles.overlay}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={`Owner @${b.owner_username}. Opens their profile`}
+            onPress={() => router.push(userPath(b.owner_username))}
+            style={{ minHeight: touch.min, justifyContent: "center", alignSelf: "flex-start" }}
+          >
+            <Text accent>{`@${b.owner_username}`}</Text>
+          </Pressable>
+          <Text variant="caption" muted>
+            {`${Number(b.mods_count)} mods · ${Number(b.followers_count)} followers`}
+          </Text>
+        </View>
+
+        <View style={styles.pad}>
+          <GetAppBanner />
+          {blocked ? (
+            <InlineNotice headsUp title={ERROR_COPY.blocked.title} body={ERROR_COPY.blocked.body} />
+          ) : (
+            <View style={styles.actions}>
+              {isMine ? (
+                <Button title="Edit in your garage" onPress={() => router.push(`/garage/${id}`)} />
+              ) : (
+                <FollowButton target={{ kind: "build", buildId: b.build_id }} label={b.title} />
+              )}
+              <ShareButton vehicleId={id} title={b.title} />
+              {!isMine ? <SaveButton kind="build" id={id} /> : null}
+            </View>
+          )}
+          {b.description ? <Text>{b.description}</Text> : null}
+
+          <SectionHeader>Specs</SectionHeader>
+          {kindOf(b) === "ebike" ? (
+            <EbikeSpecCard bike={b} estimate={loaded.specs} />
+          ) : (
+            <>
+              {loaded.specs?.hp_status === "estimate" && loaded.specs.hp != null ? (
+                <PowerGauge hp={Number(loaded.specs.hp)} stock={isStock(loaded.specs)} />
+              ) : null}
+              <SpecCard estimate={loaded.specs} />
+            </>
+          )}
+          <StickerReactions buildId={b.build_id} isMine={isMine} />
+          <PublicPerfCard vehicleId={id} kind={kindOf(b)} />
+          <PublicProofCard vehicleId={id} />
+          <PublicGallery vehicleId={id} title={b.title} />
+
+          <SectionHeader>Build timeline</SectionHeader>
+          {mods.length === 0 ? (
+            <EmptyState expression="wrenching" message="No mods logged yet" detail="Check back soon." />
+          ) : (
+            <View style={{ gap: space.sm }}>
+              {mods.map((m) => (
+                <PublicModRow key={m.mod_id} m={m} vehicleId={id} />
+              ))}
+              {hasMore ? (
+                <Button
+                  title="Load more"
+                  variant="secondary"
+                  loading={loadingMore}
+                  onPress={async () => {
+                    setLoadingMore(true);
+                    const next = page + 1;
+                    const r = await socialService.publicMods(id, next);
+                    setLoadingMore(false);
+                    if (!r.ok) return;
+                    setMore((x) => [...x, ...r.data]);
+                    setPage(next);
+                    if (r.data.length < FEED_PAGE) setHasMore(false);
+                  }}
+                />
+              ) : null}
+            </View>
+          )}
+
+          {block.error ? <InlineError kind={block.error.key} /> : null}
+        </View>
+
+        <ReportSheet
+          visible={reporting}
+          target={{ type: "build", id: b.build_id }}
+          onClose={() => setReporting(false)}
+        />
+        <ConfirmModal
+          visible={confirmBlock}
+          kind="confirmBlock"
+          busy={block.busy}
+          onCancel={() => setConfirmBlock(false)}
+          onConfirm={async () => {
+            // the owner's id comes from their public profile, never from the build projection
+            const p = await profileService.getPublic(b.owner_username);
+            const r = p.ok && p.data ? await block.run(p.data.user_id) : null;
+            setConfirmBlock(false);
+            if (r?.ok) setBlocked(true);
           }}
         />
-      }
-    >
-      <ScreenMenu
-        title={b.title}
-        label="Build options"
-        actions={
-          !isMine && status === "signedIn" && !blocked
-            ? [
-                {
-                  label: "Report this build",
-                  hint: "Tell Dynorex about a problem.",
-                  onPress: () => setReporting(true),
-                },
-                {
-                  label: `Block @${b.owner_username}`,
-                  hint: "Neither of you can see or follow the other.",
-                  destructive: true,
-                  onPress: () => setConfirmBlock(true),
-                },
-              ]
-            : []
-        }
-      />
-      <HeroHeader
-        media={(style, artInset) => (
-          <PublicImage
-            uri={media.heroes[id]}
-            expected={b.has_hero}
-            alt={`Photo of ${car}`}
-            art={{
-              make: b.make,
-              model: b.model,
-              year: b.year,
-              seed: id,
-              hint: b.title,
-              inset: artInset,
-              animate: true,
-              kind: kindOf(b),
-            }}
-            style={style}
-          />
-        )}
-        title={b.title}
-        subtitle={[car, kindDetail(b)].filter(Boolean).join(" · ")}
-        stats={kindOf(b) === "ebike" ? ebikeHeroStats(b) : heroStatsFrom(loaded.specs)}
-        honk={(tap) => honkLine(b.make, b.model, b.year, tap)}
-      />
-      <View style={styles.overlay}>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={`Owner @${b.owner_username}. Opens their profile`}
-          onPress={() => router.push(userPath(b.owner_username))}
-          style={{ minHeight: touch.min, justifyContent: "center", alignSelf: "flex-start" }}
-        >
-          <Text accent>{`@${b.owner_username}`}</Text>
-        </Pressable>
-        <Text variant="caption" muted>
-          {`${Number(b.mods_count)} mods · ${Number(b.followers_count)} followers`}
-        </Text>
-      </View>
-
-      <View style={styles.pad}>
-        <GetAppBanner />
-        {blocked ? (
-          <InlineNotice headsUp title={ERROR_COPY.blocked.title} body={ERROR_COPY.blocked.body} />
-        ) : (
-          <View style={styles.actions}>
-            {isMine ? (
-              <Button title="Edit in your garage" onPress={() => router.push(`/garage/${id}`)} />
-            ) : (
-              <FollowButton target={{ kind: "build", buildId: b.build_id }} label={b.title} />
-            )}
-            <ShareButton vehicleId={id} title={b.title} />
-            {!isMine ? <SaveButton kind="build" id={id} /> : null}
-          </View>
-        )}
-        {b.description ? <Text>{b.description}</Text> : null}
-
-        <SectionHeader>Specs</SectionHeader>
-        {kindOf(b) === "ebike" ? (
-          <EbikeSpecCard bike={b} estimate={loaded.specs} />
-        ) : (
-          <>
-            {loaded.specs?.hp_status === "estimate" && loaded.specs.hp != null ? (
-              <PowerGauge hp={Number(loaded.specs.hp)} stock={isStock(loaded.specs)} />
-            ) : null}
-            <SpecCard estimate={loaded.specs} />
-          </>
-        )}
-        <StickerReactions buildId={b.build_id} isMine={isMine} />
-        {timesZeroToSixty(kindOf(b)) ? <PublicPerfCard vehicleId={id} /> : null}
-        <PublicProofCard vehicleId={id} />
-        <PublicGallery vehicleId={id} title={b.title} />
-
-        <SectionHeader>Build timeline</SectionHeader>
-        {mods.length === 0 ? (
-          <EmptyState expression="wrenching" message="No mods logged yet" detail="Check back soon." />
-        ) : (
-          <View style={{ gap: space.sm }}>
-            {mods.map((m) => (
-              <PublicModRow key={m.mod_id} m={m} vehicleId={id} />
-            ))}
-            {hasMore ? (
-              <Button
-                title="Load more"
-                variant="secondary"
-                loading={loadingMore}
-                onPress={async () => {
-                  setLoadingMore(true);
-                  const next = page + 1;
-                  const r = await socialService.publicMods(id, next);
-                  setLoadingMore(false);
-                  if (!r.ok) return;
-                  setMore((x) => [...x, ...r.data]);
-                  setPage(next);
-                  if (r.data.length < FEED_PAGE) setHasMore(false);
-                }}
-              />
-            ) : null}
-          </View>
-        )}
-
-        {block.error ? <InlineError kind={block.error.key} /> : null}
-      </View>
-
-      <ReportSheet visible={reporting} target={{ type: "build", id: b.build_id }} onClose={() => setReporting(false)} />
-      <ConfirmModal
-        visible={confirmBlock}
-        kind="confirmBlock"
-        busy={block.busy}
-        onCancel={() => setConfirmBlock(false)}
-        onConfirm={async () => {
-          // the owner's id comes from their public profile, never from the build projection
-          const p = await profileService.getPublic(b.owner_username);
-          const r = p.ok && p.data ? await block.run(p.data.user_id) : null;
-          setConfirmBlock(false);
-          if (r?.ok) setBlocked(true);
-        }}
-      />
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 

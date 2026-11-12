@@ -6,7 +6,7 @@ import { CategoryIcon, StatusChip, categoryLabel } from "@/components/build/Buil
 import { SignedImage } from "@/components/build/SignedImage";
 import { EbikeSpecCard, SpecCard } from "@/components/build/SpecCard";
 import { ebikeHeroStats, HeroHeader, heroStatsFrom } from "@/components/vehicle/HeroHeader";
-import { kindDetail, kindOf, timesZeroToSixty, usesNhtsa } from "@/domain/vehicleKind";
+import { emotoCurrent, kindDetail, kindOf, usesNhtsa } from "@/domain/vehicleKind";
 import { PowerGauge } from "@/components/vehicle/PowerGauge";
 import { isStock } from "@/domain/specRange";
 import { VehicleArt } from "@/components/vehicle/VehicleArt";
@@ -107,6 +107,8 @@ export default function VehicleDetail() {
   const odoBadge = odometerBadge(v.odometer === null ? null : Number(v.odometer), v.odometer_unit);
   const sold = Boolean(v.sold_at);
   const kind = kindOf(v);
+  // D-74: an e-moto shows what its latest controller or battery mod set
+  const current = kind === "ebike" ? { ...v, ...emotoCurrent(mods) } : v;
 
   return (
     <Animated.ScrollView
@@ -139,8 +141,8 @@ export default function VehicleDetail() {
         // the mileage has its own row below (where it's updated), except on a sold car's read-only copy
         kicker={`${sold ? "Sold" : v.visibility === "public" ? "Public" : "Private"}${sold && v.odometer !== null ? ` · ${Number(v.odometer).toLocaleString()} ${v.odometer_unit}` : ""}${odoBadge ? ` · ${odoBadge}` : ""}`}
         title={v.nickname || `${v.make} ${v.model}`}
-        subtitle={[`${name}${v.trim_level ? ` ${v.trim_level}` : ""}`, kindDetail(v)].filter(Boolean).join(" · ")}
-        stats={kind === "ebike" ? ebikeHeroStats(v) : heroStatsFrom(data!.estimate)}
+        subtitle={[`${name}${v.trim_level ? ` ${v.trim_level}` : ""}`, kindDetail(current)].filter(Boolean).join(" · ")}
+        stats={kind === "ebike" ? ebikeHeroStats(current) : heroStatsFrom(data!.estimate)}
         honk={(tap) => honkLine(v.make, v.model, v.year, tap)}
         scrollY={scrollY}
       />
@@ -194,7 +196,7 @@ export default function VehicleDetail() {
 
         <SectionHeader>Specs</SectionHeader>
         {kind === "ebike" ? (
-          <EbikeSpecCard bike={v} estimate={data!.estimate} />
+          <EbikeSpecCard bike={current} estimate={data!.estimate} />
         ) : (
           <>
             {data!.estimate?.hp_status === "estimate" && data!.estimate.hp != null ? (
@@ -214,7 +216,7 @@ export default function VehicleDetail() {
         ) : null}
         {/* NHTSA recalls and 0-60 runs cover cars and motorcycles, not e-bikes (D-71) */}
         {usesNhtsa(kind) ? <RecallsCard vehicleId={id} car={name} /> : null}
-        {timesZeroToSixty(kind) ? <PerfCard vehicleId={id} /> : null}
+        <PerfCard vehicleId={id} kind={kind} />
         <RecordsCard vehicleId={id} />
         {/* each kind has its own job list in the log (D-72: chain lube, valve checks, battery care...) */}
         <MaintenanceCard
@@ -303,7 +305,7 @@ function SharingCard({
       <SectionHeader>Sharing</SectionHeader>
       <Text>{isPublic ? "Public: anyone with the link can see this build." : "Private: only you can see it."}</Text>
       <Text variant="caption" muted>
-        A public page shows the car, build name, photos, specs estimate and mods (name, category, brand, status, date).
+        A public page shows the vehicle, build name, photos, specs estimate and mods (name, category, brand, status, date).
         Never your VIN, odometer, costs, notes or location.
       </Text>
       {publish.error ? <InlineError kind={publish.error.key} /> : null}

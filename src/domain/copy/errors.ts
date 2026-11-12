@@ -303,12 +303,12 @@ export const ERROR_COPY = {
   },
   vinLocked: {
     title: "VIN is locked",
-    body: "A buyer's link or transfer code exists for this car, so its VIN can't change. Contact support if it's wrong.",
+    body: "A buyer's link or transfer code exists for this vehicle, so its VIN or frame number can't change. Contact support if it's wrong.",
     actions: ["OK"],
   },
   vinRequired: {
     title: "Add the VIN first",
-    body: "The buyer proves they have the car by typing its VIN. Add it on the vehicle's edit screen.",
+    body: "The buyer proves they have the vehicle by typing its VIN (an e-moto's frame number). Add it on the vehicle's edit screen.",
     actions: ["OK"],
   },
   emissionsConfirm: {

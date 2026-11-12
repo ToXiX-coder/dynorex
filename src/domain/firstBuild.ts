@@ -12,13 +12,18 @@ export type FirstBuildFacts = {
   shared: boolean;
 };
 
-export type FirstBuildStep = { id: "car" | "mod" | "paperwork" | "share"; title: string; detail: string; done: boolean };
+export type FirstBuildStep = {
+  id: "car" | "mod" | "paperwork" | "share";
+  title: string;
+  detail: string;
+  done: boolean;
+};
 
 export function firstBuildSteps(f: FirstBuildFacts): FirstBuildStep[] {
   return [
     {
       id: "car",
-      title: "Add your car",
+      title: "Add your ride",
       detail: "Year, make and model. Factory specs fill in.",
       done: f.vehicleId !== null,
     },

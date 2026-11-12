@@ -51,7 +51,8 @@ function GarageList() {
 
   const vehicles = data ?? [];
   // a car you sold (D-64) stays as a read-only copy and doesn't use up the free plan
-  const atLimit = plan && plan.vehicle_limit !== null && vehicles.filter((v) => !v.sold_at).length >= plan.vehicle_limit;
+  const atLimit =
+    plan && plan.vehicle_limit !== null && vehicles.filter((v) => !v.sold_at).length >= plan.vehicle_limit;
 
   return (
     <FlatList
@@ -94,7 +95,7 @@ function GarageList() {
               />
               <ListRow
                 title="Take over a record"
-                detail="Bought a car with a Build Record? Claim it here."
+                detail="Bought one with a Build Record? Claim it here."
                 onPress={() => router.push("/garage/claim")}
               />
             </ListGroup>
@@ -111,7 +112,7 @@ function GarageList() {
           />
           <Button title="Wishlist" variant="secondary" onPress={() => router.push("/garage/wishlist")} />
           <Button
-            title="Bought a car with a Build Record?"
+            title="Bought a vehicle with a Build Record?"
             variant="secondary"
             onPress={() => router.push("/garage/claim")}
           />

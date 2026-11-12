@@ -19,6 +19,7 @@ import type { RecordEntry } from "@/services/supabase/database.types";
 import { withPress } from "@/theme/press";
 import { themed } from "@/theme/themed";
 import { color, radius, space, spring, touch } from "@/theme/tokens";
+import { batteryReadingText } from "@/domain/maintenance";
 
 /**
  * D-64: the Build Record's building blocks. The ladder shows how much an entry rests on, in four steps, always
@@ -41,9 +42,7 @@ function Mark({ on, delay, animate }: { on: boolean; delay: number; animate: boo
   }, [animate, reduced, on, delay, v]);
   return (
     <View style={[styles.mark, on && styles.markLitEdge]}>
-      {on ? (
-        <Animated.View style={[StyleSheet.absoluteFill, styles.markFill, { transform: [{ scaleX: v }] }]} />
-      ) : null}
+      {on ? <Animated.View style={[StyleSheet.absoluteFill, styles.markFill, { transform: [{ scaleX: v }] }]} /> : null}
     </View>
   );
 }
@@ -181,7 +180,15 @@ function EntryCardBody({
     );
     if (e.installed_by) sub.push(`at ${e.installed_by}`);
   } else if (e.installed_by) sub.push(`Fitted by ${e.installed_by}`);
-  if (e.type === "mod" && e.category && EMISSIONS_CATEGORIES.includes(e.category) && e.compliance !== "not_emissions_related") {
+  // D-74: an e-moto battery check's readings, labelled as the owner's
+  const battery = batteryReadingText(e);
+  if (battery) sub.push(`${battery}, owner-reported`);
+  if (
+    e.type === "mod" &&
+    e.category &&
+    EMISSIONS_CATEGORIES.includes(e.category) &&
+    e.compliance !== "not_emissions_related"
+  ) {
     sub.push(e.carb_eo ? `CARB EO ${e.carb_eo}` : COMPLIANCE_LABELS[e.compliance ?? "unknown"]);
   }
   const body = (
@@ -229,7 +236,12 @@ function EntryCardBody({
 export function FlagLine({ text }: { text: string }) {
   return (
     <View style={styles.flag}>
-      <Text variant="caption" style={{ color: color.danger }} accessibilityElementsHidden importantForAccessibility="no">
+      <Text
+        variant="caption"
+        style={{ color: color.danger }}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+      >
         ⚑
       </Text>
       <Text variant="caption" style={{ flex: 1 }}>

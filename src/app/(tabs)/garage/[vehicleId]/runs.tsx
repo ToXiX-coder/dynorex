@@ -10,6 +10,7 @@ import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Text } from "@/components/Text";
 import { ESTIMATE_LABEL, modImpact } from "@/domain/perf";
+import { kindOf } from "@/domain/vehicleKind";
 import type { MappedError } from "@/features/auth/errors";
 import { buildService } from "@/features/garage/buildService";
 import { BestNumbers, FitmentCard, ModImpactList, QUALITY_TEXT, secs } from "@/features/garage/PerfBits";
@@ -27,6 +28,7 @@ export default function Runs() {
   const { vehicleId } = useLocalSearchParams<{ vehicleId: string }>();
   const id = String(vehicleId);
   const [vehicle, setVehicle] = useState<VehicleRow | null>(null);
+  const emoto = kindOf(vehicle) === "ebike";
   const [runs, setRuns] = useState<PerfRunRow[] | null>(null);
   const [mods, setMods] = useState<ModRow[]>([]);
   const [error, setError] = useState<MappedError | null>(null);
@@ -50,6 +52,7 @@ export default function Runs() {
   const impacts = modImpact(
     mods.map((m) => ({ id: m.id, name: m.name, installed_on: m.installed_on, status: m.status })),
     (runs ?? []).map((r) => ({ ...r, zero_sixty_s: r.zero_sixty_s === null ? null : Number(r.zero_sixty_s) })),
+    emoto ? "zero_thirty_s" : "zero_sixty_s",
   );
 
   const toggleShare = async (r: PerfRunRow) => {
@@ -67,7 +70,7 @@ export default function Runs() {
   return (
     <Screen onRefresh={load}>
       {error ? <InlineError kind={error.key} onAction={load} /> : null}
-      {runs && runs.length ? <BestNumbers runs={runs} /> : null}
+      {runs && runs.length ? <BestNumbers runs={runs} kind={kindOf(vehicle)} /> : null}
       <Button title="Time a run" fullWidth onPress={() => router.push(`/garage/${id}/run`)} />
       <Text variant="caption" muted>
         {`${ESTIMATE_LABEL} ${DISCLAIMER}`}
@@ -75,7 +78,7 @@ export default function Runs() {
 
       <SectionHeader>What each mod changed</SectionHeader>
       <Card>
-        <ModImpactList impacts={impacts} />
+        <ModImpactList impacts={impacts} mph={emoto ? 30 : 60} />
       </Card>
 
       {vehicle ? (
@@ -83,7 +86,7 @@ export default function Runs() {
           car={vehicle}
           title="What other owners run"
           hideNames={mods.map((m) => m.name)}
-          empty="No other public builds of this car yet."
+          empty="No other public builds of this model yet."
         />
       ) : null}
 
@@ -110,6 +113,7 @@ export default function Runs() {
           </View>
           <Text variant="body">
             {[
+              r.zero_thirty_s != null ? `0–30 ${secs(r.zero_thirty_s)}` : null,
               r.zero_sixty_s !== null ? `0–60 ${secs(r.zero_sixty_s)}` : null,
               r.quarter_s !== null ? `¼ mile ${secs(r.quarter_s)} @ ${Number(r.trap_mph).toFixed(0)} mph` : null,
               r.est_whp !== null ? `~${r.est_whp} whp` : null,

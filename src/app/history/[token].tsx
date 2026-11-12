@@ -1,16 +1,25 @@
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Linking, StyleSheet, View } from "react-native";
 import { Button } from "@/components/buttons/Button";
 import { Card } from "@/components/cards/Card";
-import { InlineError } from "@/components/feedback/Inline";
+import { InlineError, TextLink } from "@/components/feedback/Inline";
 import { ErrorState, LoadingState } from "@/components/feedback/States";
 import { TextField } from "@/components/forms/TextField";
 import { Shake, Stamp } from "@/components/motion/Motion";
 import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Text } from "@/components/Text";
-import { backwardsOdometer, carName, isVinShape, normalizeVin, RECORD_DISCLAIMER, recordDate, recordSummary } from "@/domain/record";
+import {
+  backwardsOdometer,
+  bikeIndexSearchUrl,
+  carName,
+  identFor,
+  normalizeVin,
+  RECORD_DISCLAIMER,
+  recordDate,
+  recordSummary,
+} from "@/domain/record";
 import { SPEC_DISCLAIMER } from "@/domain/specs";
 import type { MappedError } from "@/features/auth/errors";
 import { FlagLine, RecordEntryCard, RecordLegend, RecordStrip } from "@/features/record/RecordBits";
@@ -88,7 +97,7 @@ export default function BuildRecordPage() {
         <RecordStrip entries={rec.entries} />
       </Card>
 
-      <VinCheckCard token={String(token)} />
+      <VinCheckCard token={String(token)} kind={rec.car.kind ?? null} />
       <RecordLegend />
 
       <SectionHeader>Entries</SectionHeader>
@@ -107,16 +116,24 @@ export default function BuildRecordPage() {
   );
 }
 
-const VIN_COPY: Record<VinCheck, { good: boolean; text: string }> = {
-  match: { good: true, text: "This VIN matches the record." },
-  no_match: { good: false, text: "This VIN doesn't match the record. Check for a typo, then ask the seller." },
-  no_vin_on_record: { good: false, text: "The owner hasn't added a VIN to this record, so it can't be checked." },
-  too_many: { good: false, text: "Too many checks on this link. Try again in an hour." },
-  not_found: { good: false, text: "This link no longer works." },
-};
+function vinCopy(id: ReturnType<typeof identFor>): Record<VinCheck, { good: boolean; text: string }> {
+  return {
+    match: { good: true, text: `This ${id.name} matches the record.` },
+    no_match: { good: false, text: `This ${id.name} doesn't match the record. Check for a typo, then ask the seller.` },
+    no_vin_on_record: {
+      good: false,
+      text: `The owner hasn't added a ${id.name} to this record, so it can't be checked.`,
+    },
+    too_many: { good: false, text: "Too many checks on this link. Try again in an hour." },
+    not_found: { good: false, text: "This link no longer works." },
+  };
+}
 
-/** "Is this the car in front of you?" The answer is match or no match; the record's VIN is never shown. */
-function VinCheckCard({ token }: { token: string }) {
+/** "Is this the vehicle in front of you?" The answer is match or no match; the record's VIN or frame number is never shown. */
+function VinCheckCard({ token, kind }: { token: string; kind: string | null }) {
+  const id = identFor(kind);
+  const VIN_COPY = vinCopy(id);
+  const noun = kind === "ebike" ? "e-moto" : kind === "motorcycle" ? "bike" : "car";
   const [vin, setVin] = useState("");
   const [result, setResult] = useState<VinCheck | null>(null);
   // counts checks, so the same answer twice still lands (stamps again, or shakes again)
@@ -125,13 +142,12 @@ function VinCheckCard({ token }: { token: string }) {
   const [error, setError] = useState<MappedError | null>(null);
   return (
     <Card style={{ gap: space.sm }}>
-      <Text variant="label">Is this the car in front of you?</Text>
+      <Text variant="label">{`Is this the ${noun} in front of you?`}</Text>
       <Text variant="caption" muted>
-        Type the VIN from the windshield or the door jamb. You&apos;ll see match or no match; the record&apos;s VIN is
-        never shown.
+        {`Type the ${id.name}. ${id.where} You'll see match or no match; the record's ${id.name} is never shown.`}
       </Text>
       <TextField
-        label="VIN on the car"
+        label={`${id.short} on the ${noun}`}
         value={vin}
         onChangeText={(t) => {
           setVin(t);
@@ -141,10 +157,10 @@ function VinCheckCard({ token }: { token: string }) {
         maxLength={20}
       />
       <Button
-        title="Check VIN"
+        title={`Check ${id.name}`}
         variant="secondary"
         loading={busy}
-        disabled={!isVinShape(vin)}
+        disabled={!id.ok(vin)}
         onPress={async () => {
           setBusy(true);
           setError(null);
@@ -172,6 +188,18 @@ function VinCheckCard({ token }: { token: string }) {
             <FlagLine text={VIN_COPY[result].text} />
           </Shake>
         )
+      ) : null}
+      {kind === "ebike" && id.ok(vin) ? (
+        <TextLink
+          title="Search Bike Index for this frame number"
+          onPress={() => void Linking.openURL(bikeIndexSearchUrl(vin)).catch(() => {})}
+        />
+      ) : null}
+      {kind === "ebike" ? (
+        <Text variant="caption" muted>
+          Bike Index is a free registry where owners report stolen bikes. Not finding it there doesn&apos;t prove a bike
+          isn&apos;t stolen.
+        </Text>
       ) : null}
       {error ? <InlineError kind={error.key} /> : null}
     </Card>

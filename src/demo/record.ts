@@ -41,7 +41,16 @@ function entriesOf(st: DemoState, vehicleId: string): RecordEntry[] {
       .filter((x) => x.entry_type === type && x.entry_id === id)
       .sort((a, b) => b.at.localeCompare(a.at))[0];
     return c
-      ? { decision: c.decision, via: c.via, shop_name: c.shop_name, shop_city: c.shop_city, odometer: c.odometer, note: c.note, at: c.at, version: c.version }
+      ? {
+          decision: c.decision,
+          via: c.via,
+          shop_name: c.shop_name,
+          shop_city: c.shop_city,
+          odometer: c.odometer,
+          note: c.note,
+          at: c.at,
+          version: c.version,
+        }
       : null;
   };
   const files = (pick: (r: (typeof st.receipts)[number]) => boolean) =>
@@ -104,6 +113,8 @@ function entriesOf(st: DemoState, vehicleId: string): RecordEntry[] {
       revisions: revs("maintenance", r.id),
       receipts: files((x) => x.maintenance_id === r.id),
       confirmation: conf("maintenance", r.id),
+      battery_cycles: r.battery_cycles ?? null,
+      battery_full_v: r.battery_full_v ?? null,
     }));
   const dyno: RecordEntry[] = st.dynoResults
     .filter((d) => d.vehicle_id === vehicleId)
@@ -127,14 +138,16 @@ function entriesOf(st: DemoState, vehicleId: string): RecordEntry[] {
       receipts: [],
       confirmation: null,
     }));
-  return [...mods, ...service, ...dyno].sort((a, b) => b.date.localeCompare(a.date) || b.logged_at.localeCompare(a.logged_at));
+  return [...mods, ...service, ...dyno].sort(
+    (a, b) => b.date.localeCompare(a.date) || b.logged_at.localeCompare(a.logged_at),
+  );
 }
 
 function recordOf(vehicleId: string): BuildRecord | null {
   const v = S().vehicles.find((x) => x.id === vehicleId && !x.deleted_at);
   if (!v) return null;
   return {
-    car: { year: v.year, make: v.make, model: v.model, trim: v.trim_level },
+    car: { year: v.year, make: v.make, model: v.model, trim: v.trim_level, kind: v.kind ?? "car" },
     odometer: v.odometer === null ? null : Number(v.odometer),
     odometer_unit: v.odometer_unit,
     owners: (v.previous_owners ?? 0) + 1,
@@ -143,7 +156,8 @@ function recordOf(vehicleId: string): BuildRecord | null {
     entries: entriesOf(S(), v.id),
   };
 }
-const liveShare = (token: string) => S().historyShares.find((x) => x.token === token && Date.parse(x.expires_at) > Date.now());
+const liveShare = (token: string) =>
+  S().historyShares.find((x) => x.token === token && Date.parse(x.expires_at) > Date.now());
 const myCar = (id: string) => S().vehicles.find((v) => v.id === id && v.owner_id === DEMO_ME && !v.deleted_at);
 
 function entryRow(type: "mod" | "maintenance", id: string) {
@@ -183,7 +197,14 @@ function statusOf(r: DemoState["confirmRequests"][number]): ConfirmLinkStatus {
 }
 function answer(
   r: DemoState["confirmRequests"][number],
-  a: { decision: "confirmed" | "declined"; via: "shop_account" | "link"; shopName: string; shopCity: string | null; odometer: number | null; note: string | null },
+  a: {
+    decision: "confirmed" | "declined";
+    via: "shop_account" | "link";
+    shopName: string;
+    shopCity: string | null;
+    odometer: number | null;
+    note: string | null;
+  },
 ): ConfirmAnswer {
   const status = statusOf(r);
   if (status !== "open") return status;
@@ -226,8 +247,10 @@ export const demoRecordService: RecordServiceApi = {
       if (recent.length >= 10) return "too_many";
       vinChecks.set(token, [...recent, Date.now()]);
       const v = S().vehicles.find((x) => x.id === s.vehicle_id);
-      if (!v?.vin) return "no_vin_on_record";
-      return v.vin === normalizeVin(vin) ? "match" : "no_match";
+      // D-74: an e-moto is checked by its frame number
+      const ident = v?.kind === "ebike" ? v.frame_serial : v?.vin;
+      if (!ident) return "no_vin_on_record";
+      return normalizeVin(ident) === normalizeVin(vin) ? "match" : "no_match";
     }),
 
   requestConfirmation: (type, id, businessId) =>
@@ -321,9 +344,15 @@ export const demoRecordService: RecordServiceApi = {
     K.run(() => {
       const v = myCar(vehicleId) ?? K.refuse("buildNotFound");
       if (v.sold_at) K.refuse("vehicleSold");
-      if (!v.vin) K.refuse("vinRequired");
+      if (!(v.kind === "ebike" ? v.frame_serial : v.vin)) K.refuse("vinRequired");
       S().transfers.forEach((t) => t.vehicle_id === vehicleId && (t.closed_at ??= now()));
-      S().transfers.push({ vehicle_id: vehicleId, code: DEMO_TRANSFER_CODE, expires_at: new Date(Date.now() + 14 * DAY).toISOString(), closed_at: null, failed: 0 });
+      S().transfers.push({
+        vehicle_id: vehicleId,
+        code: DEMO_TRANSFER_CODE,
+        expires_at: new Date(Date.now() + 14 * DAY).toISOString(),
+        closed_at: null,
+        failed: 0,
+      });
       v.vin_locked_at ??= now();
       return DEMO_TRANSFER_CODE;
     }),
@@ -336,7 +365,8 @@ export const demoRecordService: RecordServiceApi = {
   claimTransfer: (code, vin) =>
     K.run(() => {
       const c = normalizeClaimCode(code);
-      if (S().transfers.some((t) => t.code === c && !t.closed_at)) return { status: "own_car" as const, vehicleId: null };
+      if (S().transfers.some((t) => t.code === c && !t.closed_at))
+        return { status: "own_car" as const, vehicleId: null };
       if (c !== DEMO_CLAIM.code || S().vehicles.some((v) => v.vin === DEMO_CLAIM.vin && v.owner_id === DEMO_ME))
         return { status: "code_invalid" as const, vehicleId: null };
       if (normalizeVin(vin) !== DEMO_CLAIM.vin) return { status: "vin_mismatch" as const, vehicleId: null };

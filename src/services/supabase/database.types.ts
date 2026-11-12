@@ -169,6 +169,10 @@ export type ModRow = {
   installed_on: string | null;
   /** D-62: who fitted it (a shop or "self"), for the insurance list. Private. */
   installed_by?: string | null;
+  /** D-74: an e-moto mod that replaces the numbers (peak W, pack V, pack Wh) */
+  sets_motor_w?: number | null;
+  sets_battery_v?: number | null;
+  sets_battery_wh?: number | null;
   /** D-68: the car's mileage when it was fitted; on the Build Record, moves the odometer up */
   installed_odometer?: number | null;
   /** D-64: emissions status, for engine / exhaust / electronics parts */
@@ -339,6 +343,10 @@ export type PublicBuild = {
   /** D-73 */
   battery_v?: number | null;
   street_legal?: boolean | null;
+  /** D-74: an e-moto's numbers from its newest complete mod that sets them (null: stock) */
+  mod_motor_w?: number | null;
+  mod_battery_v?: number | null;
+  mod_battery_wh?: number | null;
 };
 export type PublicSpecRow = Omit<
   SpecEstimateRow,
@@ -722,10 +730,21 @@ export type MaintenanceRecord = {
   deleted_at: Ts | null;
   /** D-64, server only: copied from an earlier owner's record (read-only) */
   inherited_at?: Ts | null;
+  /** D-74: an e-moto battery check's readings (the owner's, never verified) */
+  battery_cycles?: number | null;
+  battery_full_v?: number | string | null;
 };
 export type MaintenanceInput = Pick<
   MaintenanceRecord,
-  "title" | "done_on" | "odometer" | "cost_minor" | "notes" | "next_due_on" | "next_due_odometer"
+  | "title"
+  | "done_on"
+  | "odometer"
+  | "cost_minor"
+  | "notes"
+  | "next_due_on"
+  | "next_due_odometer"
+  | "battery_cycles"
+  | "battery_full_v"
 >;
 export type RoomType = "event" | "club";
 export type RoomMessage = {
@@ -810,10 +829,13 @@ export type RecordEntry = {
   revisions: { at: Ts; changed: string[] }[];
   receipts: { uploaded_at: Ts; sha256: string | null }[];
   confirmation: RecordConfirmation | null;
+  /** D-74: an e-moto battery check's readings, owner-reported */
+  battery_cycles?: number | null;
+  battery_full_v?: number | string | null;
 };
 /** A car's Build Record: the owner's view (my_build_record) and a buyer's (build_record). No VIN, costs, notes, owner. */
 export type BuildRecord = {
-  car: { year: number; make: string; model: string; trim: string | null };
+  car: { year: number; make: string; model: string; trim: string | null; kind?: string | null };
   odometer: number | null;
   odometer_unit: "mi" | "km";
   owners: number;
@@ -957,6 +979,8 @@ export type PerfRunRow = {
   vehicle_id: string;
   ran_at: Ts;
   zero_sixty_s: number | null;
+  /** D-74: e-motos are timed 0-30 mph */
+  zero_thirty_s?: number | null;
   quarter_s: number | null;
   trap_mph: number | null;
   est_whp: number | null;
@@ -973,7 +997,15 @@ export type PerfRunRow = {
 export type PerfRunInput = Omit<PerfRunRow, "id" | "owner_id" | "created_at" | "deleted_at">;
 export type PublicPerfRun = Pick<
   PerfRunRow,
-  "vehicle_id" | "ran_at" | "zero_sixty_s" | "quarter_s" | "trap_mph" | "est_whp" | "sample_hz" | "quality"
+  | "vehicle_id"
+  | "ran_at"
+  | "zero_sixty_s"
+  | "zero_thirty_s"
+  | "quarter_s"
+  | "trap_mph"
+  | "est_whp"
+  | "sample_hz"
+  | "quality"
 > & { run_id: string };
 export type FitmentRow = {
   name: string;
@@ -1074,6 +1106,9 @@ export type Database = {
             | "installed_on"
             | "installed_by"
             | "installed_odometer"
+            | "sets_motor_w"
+            | "sets_battery_v"
+            | "sets_battery_wh"
             | "compliance"
             | "carb_eo"
             | "client_ref"
@@ -1092,6 +1127,9 @@ export type Database = {
           | "installed_on"
           | "installed_by"
           | "installed_odometer"
+          | "sets_motor_w"
+          | "sets_battery_v"
+          | "sets_battery_wh"
           | "compliance"
           | "carb_eo"
         >
@@ -1509,10 +1547,18 @@ export type Database = {
       my_confirm_requests: { Args: { p_vehicle: string }; Returns: MyConfirmRequest[] };
       shop_confirm_requests: { Args: Record<string, never>; Returns: ShopConfirmRequest[] };
       answer_record_confirmation: {
-        Args: { p_request: string; p_decision: "confirmed" | "declined"; p_odometer: number | null; p_note: string | null };
+        Args: {
+          p_request: string;
+          p_decision: "confirmed" | "declined";
+          p_odometer: number | null;
+          p_note: string | null;
+        };
         Returns: ConfirmAnswer;
       };
-      confirm_link_view: { Args: { p_token: string }; Returns: (ConfirmJob & { status: ConfirmLinkStatus }) | { status: "not_found" } };
+      confirm_link_view: {
+        Args: { p_token: string };
+        Returns: (ConfirmJob & { status: ConfirmLinkStatus }) | { status: "not_found" };
+      };
       confirm_by_link: {
         Args: {
           p_token: string;

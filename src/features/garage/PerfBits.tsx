@@ -16,6 +16,7 @@ import { Chip } from "@/components/buttons/Chip";
 import { buildService, type VehicleCard } from "./buildService";
 import { CardLinkHeader } from "./MaintenanceBits";
 import { perfService } from "./perfService";
+import type { VehicleKind } from "@/domain/vehicleKind";
 
 // SVG text on web otherwise falls back to a serif face
 const SVG_FONT = Platform.OS === "web" ? "system-ui, -apple-system, Segoe UI, Roboto, sans-serif" : undefined;
@@ -28,32 +29,44 @@ export const QUALITY_TEXT: Record<PerfQuality, string> = {
   rough: "Rough GPS (under 4 updates a second): treat as a ballpark",
 };
 
-type RunLike = Pick<PublicPerfRun, "zero_sixty_s" | "quarter_s" | "trap_mph" | "est_whp">;
+type RunLike = Pick<PublicPerfRun, "zero_sixty_s" | "zero_thirty_s" | "quarter_s" | "trap_mph" | "est_whp">;
 /** Best of each number across runs: quickest times, highest power. */
 export function bests(runs: readonly RunLike[]) {
   const nums = (k: keyof RunLike) =>
     runs
       .map((r) => r[k])
-      .filter((x): x is number => x !== null)
+      .filter((x): x is number => x !== null && x !== undefined)
       .map(Number);
   const min = (xs: number[]) => (xs.length ? Math.min(...xs) : null);
   const quarter = min(nums("quarter_s"));
   return {
     zeroSixty: min(nums("zero_sixty_s")),
+    zeroThirty: min(nums("zero_thirty_s")),
     quarter,
     trap: quarter === null ? null : Number(runs.find((r) => Number(r.quarter_s) === quarter)?.trap_mph ?? null),
     whp: nums("est_whp").length ? Math.max(...nums("est_whp")) : null,
   };
 }
 
-/** Three big numbers in a row: best 0-60, best quarter (with trap), best power estimate. */
-export function BestNumbers({ runs }: { runs: readonly RunLike[] }) {
+/**
+ * Three big numbers in a row: best 0-60, best quarter (with trap), best power estimate. An e-moto (D-74) leads with
+ * 0-30 and has no power estimate (the drag model is a car's).
+ */
+export function BestNumbers({ runs, kind = "car" }: { runs: readonly RunLike[]; kind?: VehicleKind }) {
   const b = bests(runs);
-  const cells: [string, string, string | null][] = [
-    ["0–60 mph", b.zeroSixty === null ? "–" : b.zeroSixty.toFixed(2), b.zeroSixty === null ? null : "s"],
-    ["¼ mile", b.quarter === null ? "–" : b.quarter.toFixed(2), b.trap ? `s @ ${b.trap.toFixed(0)}` : null],
-    ["Est. power", b.whp === null ? "–" : String(b.whp), b.whp === null ? null : "whp"],
-  ];
+  const t = (x: number | null) => (x === null ? "–" : x.toFixed(2));
+  const cells: [string, string, string | null][] =
+    kind === "ebike"
+      ? [
+          ["0–30 mph", t(b.zeroThirty), b.zeroThirty === null ? null : "s"],
+          ["0–60 mph", t(b.zeroSixty), b.zeroSixty === null ? null : "s"],
+          ["¼ mile", t(b.quarter), b.trap ? `s @ ${b.trap.toFixed(0)}` : null],
+        ]
+      : [
+          ["0–60 mph", b.zeroSixty === null ? "–" : b.zeroSixty.toFixed(2), b.zeroSixty === null ? null : "s"],
+          ["¼ mile", b.quarter === null ? "–" : b.quarter.toFixed(2), b.trap ? `s @ ${b.trap.toFixed(0)}` : null],
+          ["Est. power", b.whp === null ? "–" : String(b.whp), b.whp === null ? null : "whp"],
+        ];
   return (
     <View style={styles.bests}>
       {cells.map(([label, value, unit]) => (
@@ -79,7 +92,7 @@ export function BestNumbers({ runs }: { runs: readonly RunLike[] }) {
 }
 
 /** "Performance" card on your vehicle page: best numbers and the way into runs. */
-export function PerfCard({ vehicleId }: { vehicleId: string }) {
+export function PerfCard({ vehicleId, kind = "car" }: { vehicleId: string; kind?: VehicleKind }) {
   const [runs, setRuns] = useState<PerfRunRow[] | null>(null);
   useEffect(() => {
     let alive = true;
@@ -100,10 +113,10 @@ export function PerfCard({ vehicleId }: { vehicleId: string }) {
         <CardLinkHeader title="Performance" action={runs && runs.length ? "Runs" : "Time a run"} />
       </Pressable>
       {runs && runs.length ? (
-        <BestNumbers runs={runs} />
+        <BestNumbers runs={runs} kind={kind} />
       ) : (
         <Text variant="caption" muted>
-          Time 0–60 and the quarter mile with your phone, then see what each mod actually changed.
+          {`Time ${kind === "ebike" ? "0–30" : "0–60"} and the quarter mile with your phone, then see what each mod actually changed.`}
         </Text>
       )}
       <Text variant="caption" muted>
@@ -113,8 +126,19 @@ export function PerfCard({ vehicleId }: { vehicleId: string }) {
   );
 }
 
-/** Speed over time with a 60 mph line. Decorative for screen readers: the numbers beside it carry the result. */
-export function SpeedTrace({ samples, height = 150 }: { samples: readonly Sample[]; height?: number }) {
+/**
+ * Speed over time with a 60 mph line (30 for an e-moto, D-74). Decorative for screen readers: the numbers beside it
+ * carry the result.
+ */
+export function SpeedTrace({
+  samples,
+  height = 150,
+  mark = 60,
+}: {
+  samples: readonly Sample[];
+  height?: number;
+  mark?: number;
+}) {
   const W = 320;
   const H = 150;
   const pad = { l: 30, r: 8, t: 8, b: 20 };
@@ -150,14 +174,21 @@ export function SpeedTrace({ samples, height = 150 }: { samples: readonly Sample
         <Line
           x1={pad.l}
           x2={W - pad.r}
-          y1={y(60)}
-          y2={y(60)}
+          y1={y(mark)}
+          y2={y(mark)}
           stroke={color.danger}
           strokeDasharray="4 3"
           strokeWidth={1}
         />
-        <SvgText x={W - pad.r} y={y(60) - 3} fontSize={9} fontFamily={SVG_FONT} fill={color.textMuted} textAnchor="end">
-          60 mph
+        <SvgText
+          x={W - pad.r}
+          y={y(mark) - 3}
+          fontSize={9}
+          fontFamily={SVG_FONT}
+          fill={color.textMuted}
+          textAnchor="end"
+        >
+          {`${mark} mph`}
         </SvgText>
         <Path d={fill} fill={color.accentSoft} />
         <Path d={d} stroke={color.accent} strokeWidth={2} fill="none" strokeLinejoin="round" />
@@ -170,7 +201,7 @@ export function SpeedTrace({ samples, height = 150 }: { samples: readonly Sample
 }
 
 /** Before and after each mod: two bars (shorter is quicker) and the change in words. */
-export function ModImpactList({ impacts }: { impacts: readonly ModImpact[] }) {
+export function ModImpactList({ impacts, mph = 60 }: { impacts: readonly ModImpact[]; mph?: 30 | 60 }) {
   const shown = impacts.filter((m) => m.before !== null || m.after !== null);
   if (!shown.length)
     return (
@@ -203,7 +234,7 @@ export function ModImpactList({ impacts }: { impacts: readonly ModImpact[] }) {
             key={m.modId}
             style={{ gap: space.xxs }}
             accessible
-            accessibilityLabel={`${m.name}: best 0 to 60 before ${secs(m.before)}, after ${secs(m.after)}. ${words}.`}
+            accessibilityLabel={`${m.name}: best 0 to ${mph} before ${secs(m.before)}, after ${secs(m.after)}. ${words}.`}
           >
             <View style={{ flexDirection: "row", justifyContent: "space-between", gap: space.sm }}>
               <Text variant="bodyStrong" style={{ flex: 1 }} numberOfLines={1}>
@@ -242,7 +273,7 @@ export function ModImpactList({ impacts }: { impacts: readonly ModImpact[] }) {
 }
 
 /** Shared runs on a public build: best numbers, labelled as phone estimates. Hidden when there are none. */
-export function PublicPerfCard({ vehicleId }: { vehicleId: string }) {
+export function PublicPerfCard({ vehicleId, kind = "car" }: { vehicleId: string; kind?: VehicleKind }) {
   const [runs, setRuns] = useState<PublicPerfRun[]>([]);
   useEffect(() => {
     let alive = true;
@@ -255,7 +286,7 @@ export function PublicPerfCard({ vehicleId }: { vehicleId: string }) {
   return (
     <Card style={{ gap: space.sm }}>
       <Text variant="title">Performance</Text>
-      <BestNumbers runs={runs} />
+      <BestNumbers runs={runs} kind={kind} />
       <Text variant="caption" muted>
         {`${runs.length} shared run${runs.length === 1 ? "" : "s"}. ${ESTIMATE_LABEL}`}
       </Text>
@@ -373,7 +404,7 @@ export function ListingFitment({ category, title, fits }: { category: string; ti
         category={category}
         terms={title}
         title={`Owners of your ${car.model} who run this`}
-        empty="No public builds of your car list a part like this yet. Check the seller's fit notes and ask before you buy."
+        empty="No public builds of your model list a part like this yet. Check the seller's fit notes and ask before you buy."
       />
     </View>
   );
