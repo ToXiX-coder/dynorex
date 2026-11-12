@@ -1,7 +1,7 @@
 # Dynorex product marketing doc
 
-Document version: 2
-Last updated: 2026-11-11
+Document version: 3
+Last updated: 2026-11-12
 
 ## Changelog
 
@@ -10,6 +10,9 @@ Last updated: 2026-11-11
 - 2026-11-11 v2: motorcycles and e-motos (D-71 to D-74): audience, problem, differentiation and a separate e-moto
   test goal. E-moto buyer worries (battery health, stolen bikes) come from owner forums and a buying guide cited
   in D-74; no Dynorex user data yet.
+- 2026-11-12 v3: Reddit research (`marketing/reddit-research.md`). Track My Mods already offers transfer to a new
+  owner, so the handover alone isn't a difference; added it and other Reddit-launched loggers to competitors; added
+  forum phrases to customer language.
 
 ## 1. Product
 
@@ -62,8 +65,8 @@ Last updated: 2026-11-11
 
 | Type | Who | Falls short because |
 |---|---|---|
-| Direct | BuildSheet, CarBuilds, My Garage Journal, CarJourney, Auto ModList, G-Dimension (found 2026-11-11, publishes resale guides), Custodian (UK), ModMap (UK) | Logging and sharing only; none has the installer confirm the work; some call owner uploads "verified" |
-| Secondary | A spreadsheet, a folder of receipts, a forum build thread, the auction listing's text | Not tied to the car, easy to fake, lost at sale |
+| Direct | Track My Mods (subscription; already transfers a vehicle to a new owner and shares with collaborators), Revline 1, BuildSheet, CarBuilds, My Garage Journal, CarJourney, Auto ModList, G-Dimension (found 2026-11-11, publishes resale guides), Custodian (UK), ModMap (UK) | Logging and sharing only; none has the installer confirm the work; some call owner uploads "verified" |
+| Secondary | Carfax's free Car Care app, LubeLogger (self-hosted), Etsy mod spreadsheets, a spreadsheet, a folder of receipts, a forum build thread, the auction listing's text | Not tied to the car, easy to fake, lost at sale |
 | Indirect | Vehicle history reports | Title, accident and service data, not mods |
 
 ## 5. Differentiation
@@ -72,7 +75,8 @@ Last updated: 2026-11-11
 - Every entry shows exactly what backs it: owner-entered, paperwork on file, part identified, shop-confirmed.
 - Edits and removals stay visible, so nothing quietly disappears before a sale.
 - A buyer checks the VIN on the car against the record without ever seeing the VIN.
-- The record moves to the buyer with the car.
+- The record moves to the buyer with the car. (Not unique: Track My Mods transfers too. What's different is the
+  buyer reading the record and its proof from a link, with no app or account, before paying.)
 - Emissions status on engine, exhaust and electronics mods, with CARB EO numbers.
 - For e-motos: a battery log a buyer can read, "with mods" numbers shown beside stock, a frame-number check that
   never shows the frame number, and a link to search a stolen-bike registry with the number the buyer typed.
@@ -104,6 +108,10 @@ Last updated: 2026-11-11
 - Never use: verified, certified, guaranteed, dyno-proven, "Carfax" (or sound-alikes) in any public copy, name, ad
   or domain. The private pitch may use the comparison.
 - Legal line (exact): "Estimates based on user-reported data. Dynorex is not responsible for accuracy."
+- Forum phrases (Reddit, 2026-11-12; summaries, not quotes): buyers assume a modded car was "beaten on" or "driven
+  like it was stolen"; what changes their mind is "receipts", "a paper trail" from "a reputable shop" and "full
+  service history"; sellers keep "a 3-ring binder"; the standard advice is to go "back to stock" and part out the mods.
+  E-moto buyers ask about "battery health", mileage that was "reset", and whether it's "stolen".
 - `[NEED: collect real phrases from sellers and shops in interviews and add them here]`
 
 ## 9. Voice

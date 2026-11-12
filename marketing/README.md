@@ -18,6 +18,7 @@ Everything here is a draft. Nothing has been posted or sent.
 - [outreach.md](outreach.md): emails and DMs to shops and sellers, with follow-ups.
 - [content-plan.md](content-plan.md): pillars, 10 scored pieces, a six-week calendar.
 - [pricing.md](pricing.md): first price to learn from ($49 per sale, e-moto $29 test) and how to test it.
+- [reddit-research.md](reddit-research.md): what Reddit users say about tracking builds, selling modded cars, used e-motos and insurance, with links and a draft first post.
 - [social.md](social.md): content pillars, two-week calendar, video scripts (two e-moto videos added).
 - [landing-copy.md](landing-copy.md) also has an e-moto version; [outreach.md](outreach.md) has e-moto seller and
   shop scripts.
