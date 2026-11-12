@@ -1,26 +1,34 @@
 # Dynorex product marketing doc
 
-Document version: 1
-Last updated: 2026-10-17
+Document version: 2
+Last updated: 2026-11-11
 
 ## Changelog
 
 - 2026-10-17 v1: first draft from the codebase, the D-64 Build Record and the market research
   (`buildmark/research/reports/Modified car history market.md`).
+- 2026-11-11 v2: motorcycles and e-motos (D-71 to D-74): audience, problem, differentiation and a separate e-moto
+  test goal. E-moto buyer worries (battery health, stolen bikes) come from owner forums and a buying guide cited
+  in D-74; no Dynorex user data yet.
 
 ## 1. Product
 
-- **One-liner:** The build record for modified cars. Log every mod with the receipt and who fitted it, have the
-  shop confirm it, and hand the whole record to the buyer when you sell.
+- **One-liner:** The build record for modified cars, motorcycles and e-motos. Log every mod with the receipt and
+  who fitted it, have the shop confirm it, and hand the whole record to the buyer when you sell.
 - **Tagline (existing):** Prove Your Build. Find Your Road.
 - **Category customers search for:** car build log app, mod tracker, "selling a modified car", "documenting
   modifications".
 - **What it does today (built, not launched):** garage and build log, mods with emissions status and CARB EO,
   maintenance and odometer log, dyno results, receipts; the Build Record with evidence steps per entry, shop
   confirmation through a one-time link, a buyer's link with a VIN match check, a listing build sheet (text/PDF) and
-  a transfer code that moves the record to the new owner.
+  a transfer code that moves the record to the new owner. Since D-71 to D-74 it also covers motorcycles (engine
+  size, their own mod categories and service jobs) and e-motos (peak kW, pack volts and Wh, road use, a battery
+  log with charge cycles and full-charge volts, controller and battery mods that update the numbers, 0-30 mph
+  phone runs, and a frame-number check plus a Bike Index search link for buyers).
 - **Business model:** free to log. Dynorex+ is $7.99/month or $59.99/year (more vehicles and extras). A one-time
-  seller fee at listing time is the research's best bet but is not built. `[NEED: decide before charging anyone]`
+  seller fee at listing time is the research's best bet but is not built. Recommended first price (see
+  `marketing/pricing.md`): $49 once per sale for the Sale kit ($29 for e-motos, a test); buyers, shops and the
+  transfer stay free. `[NEED: owner and family decision before charging anyone]`
 
 ## 2. Audience
 
@@ -28,8 +36,14 @@ Last updated: 2026-10-17
   forums, Facebook groups). They already gather receipts and write mod lists by hand.
 - **Secondary:** owners in the middle of a build who want their work on record for insurance and for later.
 - **Partners:** small tuning and install shops who want their name on good work.
+- **Test segment (D-74):** people selling a used e-moto (Sur-Ron, Talaria and similar). Buyers ask about battery
+  health and whether the bike is stolen first. The audience skews young, which matches a teen founder, but many
+  riders are minors: keep marketing to owners selling, never encourage riding off-road bikes on the street.
+- **Also covered, not targeted yet:** modified motorcycles.
 - **Jobs to be done:** get a fair price for the work I put in; make a buyer trust my mod list; get paid on an
   insurance claim for parts I added.
+- **E-moto jobs:** prove the battery has life left; show the bike isn't stolen; show which controller and pack it
+  runs now and what stock was.
 - **Not for:** people who want a car's accident and title history (that's a vehicle history report), or anyone
   wanting to hide emissions-illegal work.
 
@@ -41,12 +55,14 @@ Last updated: 2026-10-17
   $5,200 less for answering yes; a single anecdote).
 - Good, documented builds can sell far above guide value on enthusiast auctions. Documentation is what separates
   the two prices.
+- Used e-motos: the battery is the expensive part and a buyer can't see its health; stolen bikes are common enough
+  that owners point each other to frame-number registries. Sellers have only their word and a dash reading.
 
 ## 4. Competitors
 
 | Type | Who | Falls short because |
 |---|---|---|
-| Direct | BuildSheet, CarBuilds, My Garage Journal, CarJourney, Auto ModList, Custodian (UK), ModMap (UK) | Logging and sharing only; none has the installer confirm the work; some call owner uploads "verified" |
+| Direct | BuildSheet, CarBuilds, My Garage Journal, CarJourney, Auto ModList, G-Dimension (found 2026-11-11, publishes resale guides), Custodian (UK), ModMap (UK) | Logging and sharing only; none has the installer confirm the work; some call owner uploads "verified" |
 | Secondary | A spreadsheet, a folder of receipts, a forum build thread, the auction listing's text | Not tied to the car, easy to fake, lost at sale |
 | Indirect | Vehicle history reports | Title, accident and service data, not mods |
 
@@ -58,6 +74,9 @@ Last updated: 2026-10-17
 - A buyer checks the VIN on the car against the record without ever seeing the VIN.
 - The record moves to the buyer with the car.
 - Emissions status on engine, exhaust and electronics mods, with CARB EO numbers.
+- For e-motos: a battery log a buyer can read, "with mods" numbers shown beside stock, a frame-number check that
+  never shows the frame number, and a link to search a stolen-bike registry with the number the buyer typed.
+  (Bike Index is someone else's free service; Dynorex doesn't check it automatically.)
 
 ## 6. Objections
 
@@ -78,6 +97,10 @@ Last updated: 2026-10-17
 ## 8. Customer language
 
 - Use: build, mods, receipts, who did the work, documented, paperwork, build sheet, sale, buyer, shop.
+- E-moto words: e-moto, Sur-Ron, controller, pack, cycles, frame number, off-road only, street legal. Not "e-bike"
+  for these (riders don't call a 12 kW bike an e-bike).
+- Never say a battery reading or a frame-number match proves health or ownership; they're the owner's reading and
+  a match on a number.
 - Never use: verified, certified, guaranteed, dyno-proven, "Carfax" (or sound-alikes) in any public copy, name, ad
   or domain. The private pitch may use the comparison.
 - Legal line (exact): "Estimates based on user-reported data. Dynorex is not responsible for accuracy."
@@ -99,6 +122,9 @@ None yet. No users, no revenue, no shop partners. Real proof available: the prod
 ## 11. Goal
 
 First 25 sellers of modified cars use the Build Record on a real sale, and 5 shops confirm at least one install.
+
+Side test (cheap, can run alongside): 10 people selling a used e-moto share a Build Record with a battery check
+ on it, and we ask each one whether a buyer opened it. `[NEED: the answers]`
 
 ## 12. Learnings
 

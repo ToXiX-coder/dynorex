@@ -41,6 +41,21 @@ account that a parent or guardian helps set up. Never post someone's plate, VIN 
 
 Captions: 3 to 5 words a line, two lines max. Use demo data only on screen until real users agree to be shown.
 
+**4. Dead battery? (e-moto)**
+- 0 to 3s: "You're buying a used Sur-Ron. How do you know the pack isn't cooked?"
+- 3 to 12s: "The seller says it's fine, and that's all you get."
+- 12 to 25s: screen recording of the e-moto Build Record: a battery check with cycles and full-charge volts, and
+  the controller mod showing 12 kW next to stock 8 kW. Demo data on screen, labelled.
+- 25 to 30s: "Bring a meter anyway. But ask for the record. Link in bio."
+
+**5. Is it stolen? (e-moto)**
+- 0 to 3s: "Buying an e-moto off Marketplace? Check this first."
+- 3 to 20s: type a frame number into the buyer's check, "match." Then tap the Bike Index search.
+- 20 to 30s: "Not finding it there doesn't prove it's clean. But it's 10 seconds. Link in bio."
+
+E-moto rules: show bikes off-road or parked, riders with helmets and gear, never street riding on an off-road
+bike, never a rider's face or a frame number without permission.
+
 ## Two-week calendar
 
 | Day | Post |
@@ -53,6 +68,7 @@ Captions: 3 to 5 words a line, two lines max. Use demo data only on screen until
 | Wed wk 2 | Carousel: questions to ask before buying a modified car |
 | Fri wk 2 | Video: what shops said when I asked them to confirm their work (real answers only) |
 | Sun wk 2 | Story: waitlist reminder plus what changed this week |
+| Tue wk 1 and Thu wk 2 | E-moto test: video 4, then video 5. Compare comments and link clicks with the car videos |
 
 ## Every day (30 minutes)
 

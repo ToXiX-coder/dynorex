@@ -60,8 +60,8 @@ word:
 
 1. Did any buyer open the buyer's link or ask about the record?
 2. Did it change anything: the price, how fast it sold, fewer questions?
-3. If this had cost [$__] for this sale, would you have paid it? (Pick one number before you start, somewhere in
-   the $30 to $100 range from the research, and use the same number with everyone.)
+3. If this had cost $49 for this sale, would you have paid it? ($29 for an e-moto. Same number with everyone; see
+   [pricing.md](pricing.md).)
 4. What's the most you'd have paid?
 
 A "yes" to question 3 is a signal, not a sale. The real test comes when payments exist and a seller pays.
@@ -69,6 +69,29 @@ A "yes" to question 3 is a signal, not a sale. The real test comes when payments
 ## 3. The Hamilton Collection (already drafted)
 
 The update email for Henry and Steve is in the conversation. It asks the shop question in section 1.
+
+## 4. People selling a used e-moto (D-74 test)
+
+Where: e-moto Facebook groups and marketplace, r/Surron and similar, OfferUp. Follow each site's rules, use its own
+messaging, and only contact sellers who look like adults. Never message minors.
+
+**DM:**
+
+Hi, saw your [bike] for sale. Clean build. Buyers ask about the battery first. I'm making a free app that keeps
+battery checks (cycles and full-charge volts) and the controller and pack mods on a record buyers can open, plus a
+frame-number check that doesn't show your number. Want to try it for this sale? I'll set it up with you.
+
+**Follow-up (3 days later):** No worries if not. If you try it, I'd like to know whether a buyer opened it.
+
+**After the sale:** the same four questions as section 2, plus: "Did anyone ask about the battery, and did the
+record answer it?"
+
+## 5. E-moto shops (controller and battery installs)
+
+Same script as section 1, with this middle paragraph:
+
+In Dynorex, the owner logs the controller or pack you fitted and sends you a one-time link. You tap confirm, no
+account, and buyers see "Confirmed by [your shop]" next to the new peak power and pack.
 
 ## Track it
 

@@ -9,6 +9,8 @@ Page type: pre-launch landing page. One action: join the waitlist. Traffic: soci
 **Subhead:** Log every mod with the receipt and the shop that fitted it. The shop confirms the work, the buyer
 sees all of it, and the record goes with the car when you sell.
 
+(Cars, motorcycles and e-motos. The main page leads with cars; the e-moto version is below.)
+
 **CTA button:** Get early access
 
 Under the button: Free to log your build. iPhone and Android.
@@ -70,10 +72,43 @@ Footer: Estimates based on user-reported data. Dynorex is not responsible for ac
 
 ## Meta
 
-- Title: Dynorex: the build record for modified cars
+- Title: Dynorex: the build record for modified cars and bikes
 - Description: Log every mod with the receipt and the shop that fitted it. Share it with buyers and hand it over
   when you sell.
 
 ## App store short description (80 characters max)
 
 Log your mods, get shops to confirm them, and hand the record to the buyer.
+
+## E-moto version (D-74 test segment)
+
+For traffic from e-moto posts and groups. Same one action: join the waitlist.
+
+**Headline:** Sell your e-moto with the battery on record.
+
+**Subhead:** Log the controller, the pack and every battery check. Buyers see the cycles, what it runs now next to
+stock, and can check the frame number without you posting it.
+
+**CTA:** Get early access
+
+**Why buyers trust it**
+
+- **The battery, on paper.** Each battery check records charge cycles and the volts at full charge, with the date.
+  Owner-reported, and labelled that way.
+- **What it runs now.** Fit a controller or a bigger pack and the record shows the new peak kW and pack beside the
+  stock numbers.
+- **The frame number stays private.** A buyer types the number off the frame and sees match or no match. They can
+  also search Bike Index, a free stolen-bike registry, with the number they typed.
+- **The record goes with the bike.** Hand it over with a transfer code when you sell.
+
+**FAQ**
+
+- *Does a battery reading prove the pack is healthy?* No. It's your reading with a date, and buyers see a history
+  of them. A meter at the sale is still worth doing.
+- *Does it check if a bike is stolen?* No. It links the buyer to Bike Index to search themselves. Not finding a
+  bike there doesn't prove anything.
+- *Off-road bikes?* Mark yours off-road only or street legal. Dynorex shows it as you say.
+
+Meta title: Dynorex: a build record for your e-moto
+Meta description: Log controller and battery mods and battery checks. Share it with buyers, hand it over when you
+sell.
